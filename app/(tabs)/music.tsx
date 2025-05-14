@@ -26,7 +26,7 @@ export default function MusicScreen() {
       artist: 'Океан Ельзи',
       album: 'Без меж',
       duration: '3:45',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273a3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://i.scdn.co/image/ab67616d0000b2732b4f6acf3a36bd7483eaa5df'
     },
     {
       id: '2',
@@ -34,7 +34,7 @@ export default function MusicScreen() {
       artist: 'Океан Ельзи',
       album: 'Земля',
       duration: '4:12',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273a3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://upload.wikimedia.org/wikipedia/uk/b/bc/%D0%97%D0%B5%D0%BC%D0%BB%D1%8F_%28%D0%9E._%D0%95.%29.jpg'
     },
     {
       id: '3',
@@ -42,7 +42,7 @@ export default function MusicScreen() {
       artist: 'The Hardkiss',
       album: 'Залізна ластівка',
       duration: '3:58',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273b3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://cdn-images.dzcdn.net/images/cover/a97b21665fb9fe4ff5ebad8a18b9ac51/0x1900-000000-80-0-0.jpg'
     },
     {
       id: '4',
@@ -50,7 +50,7 @@ export default function MusicScreen() {
       artist: 'The Hardkiss',
       album: 'Залізна ластівка',
       duration: '4:05',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273b3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://cdn-images.dzcdn.net/images/cover/61d19098c0eb0654ff58de5be9c83707/0x1900-000000-80-0-0.jpg'
     },
     {
       id: '5',
@@ -58,7 +58,7 @@ export default function MusicScreen() {
       artist: 'KAZKA',
       album: 'NIRVANA',
       duration: '3:30',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273c3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://f4.bcbits.com/img/a1593755960_10.jpg'
     },
     {
       id: '6',
@@ -66,7 +66,7 @@ export default function MusicScreen() {
       artist: 'KAZKA',
       album: 'KARMA',
       duration: '3:22',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273c3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://quals.ua/image/cache/catalog/Covers/kazka-karma-vinyl-2000x2000.jpg'
     },
     {
       id: '7',
@@ -74,7 +74,7 @@ export default function MusicScreen() {
       artist: 'Океан Ельзи',
       album: 'Без меж',
       duration: '4:35',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273a3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273662efff81c9deae5d06f7184'
     },
     {
       id: '8',
@@ -82,7 +82,7 @@ export default function MusicScreen() {
       artist: 'Океан Ельзи',
       album: 'Gloria',
       duration: '3:38',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273a3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://images.genius.com/a19afaf21a5c3a3eb52b6371cf8641ed.500x500x1.jpg'
     },
     {
       id: '9',
@@ -90,7 +90,7 @@ export default function MusicScreen() {
       artist: 'Христина Соловій',
       album: 'Любий друг',
       duration: '3:15',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273d3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://rock.ua/rockdb/i/cd/full/1154-lyubiy_drug.jpg'
     },
     {
       id: '10',
@@ -98,9 +98,10 @@ export default function MusicScreen() {
       artist: 'Христина Соловій',
       album: 'Любий друг',
       duration: '3:20',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273d3c9d8c9b5a3e3c3e6e5d5c7'
+      imageUrl: 'https://cdn-images.dzcdn.net/images/cover/d5898c4bb498bb94f542d4ce4b27ef50/1900x1900-000000-80-0-0.jpg'
     },
   ]);
+
 
   const filteredSongs = songs.filter(song => {
     const query = searchQuery.toLowerCase();
