@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
+import MusicPlayerUI from '@/components/MusicPlayerUI';
+import MiniPlayerUI from '@/components/MiniPlayerUI';
 
 type SongItem = {
   id: string;
@@ -19,6 +21,8 @@ export default function MusicScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentSong, setCurrentSong] = useState<SongItem | null>(null);
+  const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const [songs, setSongs] = useState<SongItem[]>([
     {
       id: '1',
@@ -112,11 +116,32 @@ export default function MusicScreen() {
     );
   });
 
+  const handleSongPress = (song: SongItem) => {
+    setCurrentSong(song);
+    setIsPlayerVisible(false);
+    // Delay to create a nice effect
+    setTimeout(() => {
+      setIsPlayerVisible(true);
+    }, 100);
+  };
+
+  const handleClosePlayer = () => {
+    setIsPlayerVisible(false);
+  };
+
+  const handleOpenPlayer = () => {
+    setIsPlayerVisible(true);
+  };
+
   const renderSongItem = ({ item }: { item: SongItem }) => (
-    <TouchableOpacity style={styles.songItem} activeOpacity={0.7}>
+    <TouchableOpacity 
+      style={styles.songItem} 
+      activeOpacity={0.7}
+      onPress={() => handleSongPress(item)}
+    >
       <Image source={{ uri: item.imageUrl }} style={styles.songImage} />
       <View style={styles.songInfo}>
-        <Text style={styles.songTitle}>{item.title}</Text>
+        <Text style={[styles.songTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>{item.title}</Text>
         <Text style={styles.songArtist}>{item.artist}</Text>
       </View>
       <View style={styles.songDetails}>
@@ -133,56 +158,75 @@ export default function MusicScreen() {
       style={[styles.container, { backgroundColor: isDark ? '#000000' : '#FFFFFF' }]}
       entering={FadeIn.duration(350).springify()}
     >
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#000000' }]}>Музика</Text>
-      </View>
-      
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#888888" style={styles.searchIcon} />
-        <TextInput
-          style={[styles.searchInput, { color: isDark ? '#FFFFFF' : '#000000' }]}
-          placeholder="Пошук музики..."
-          placeholderTextColor="#888888"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+      {isPlayerVisible ? (
+        <MusicPlayerUI 
+          song={currentSong} 
+          isVisible={isPlayerVisible} 
+          onClose={handleClosePlayer} 
         />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-            <Ionicons name="close-circle" size={20} color="#888888" />
-          </TouchableOpacity>
-        )}
-      </View>
+      ) : (
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#000000' }]}>Музика</Text>
+          </View>
+          
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color="#888888" style={styles.searchIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: isDark ? '#FFFFFF' : '#000000' }]}
+              placeholder="Пошук музики..."
+              placeholderTextColor="#888888"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+                <Ionicons name="close-circle" size={20} color="#888888" />
+              </TouchableOpacity>
+            )}
+          </View>
 
-      <View style={styles.filterContainer}>
-        <TouchableOpacity style={[styles.filterButton, styles.activeFilterButton]}>
-          <Text style={styles.activeFilterText}>Всі</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Виконавці</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Альбоми</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Плейлисти</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.filterContainer}>
+            <TouchableOpacity style={[styles.filterButton, styles.activeFilterButton]}>
+              <Text style={styles.activeFilterText}>Всі</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.filterButton}>
+              <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Виконавці</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.filterButton}>
+              <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Альбоми</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.filterButton}>
+              <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Плейлисти</Text>
+            </TouchableOpacity>
+          </View>
 
-      <FlatList
-        data={filteredSongs}
-        renderItem={renderSongItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <Animated.View entering={SlideInRight.duration(300).springify()} style={styles.emptyContainer}>
-            <Ionicons name="musical-notes" size={50} color="#888888" />
-            <Text style={styles.emptyText}>Нічого не знайдено</Text>
-          </Animated.View>
-        }
-      />
-    </SafeAreaView>
+          <FlatList
+            data={filteredSongs}
+            renderItem={renderSongItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={[
+              styles.listContainer,
+              currentSong ? { paddingBottom: 70 } : {}
+            ]}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <Animated.View entering={SlideInRight.duration(300).springify()} style={styles.emptyContainer}>
+                <Ionicons name="musical-notes" size={50} color="#888888" />
+                <Text style={styles.emptyText}>Нічого не знайдено</Text>
+              </Animated.View>
+            }
+          />
+          
+          {currentSong && !isPlayerVisible && (
+            <MiniPlayerUI
+              song={currentSong}
+              onPress={handleOpenPlayer}
+              onDismiss={() => setCurrentSong(null)}
+            />
+          )}
+        </SafeAreaView>
+      )}
     </Animated.View>
   );
 }
