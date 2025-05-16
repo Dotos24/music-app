@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -26,7 +26,10 @@ const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss })
   const isDark = colorScheme === 'dark';
   
   // Используем аудио контекст
-  const { isPlaying, position, duration, pauseSong, resumeSong } = useAudio();
+  const { isPlaying, position, duration, pauseSong, resumeSong, seekTo } = useAudio();
+  
+  // Сохраняем ширину прогресс-бара для перемотки
+  const progressBarWidth = useRef(0);
   
   // Animation values for swipe
   const translateY = useSharedValue(0);
@@ -141,14 +144,34 @@ const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss })
         </TouchableOpacity>
       </TouchableOpacity>
       
-      <View style={styles.progressBar}>
-        <View 
-          style={[
-            styles.progress, 
-            { width: `${(position / (duration || 1)) * 100}%` }
-          ]} 
-        />
-      </View>
+      <TouchableOpacity 
+        style={styles.progressBarContainer}
+        activeOpacity={1}
+        onLayout={(e) => {
+          // Сохраняем ширину прогресс-бара при его изменении
+          progressBarWidth.current = e.nativeEvent.layout.width;
+        }}
+        onPress={(e) => {
+          // Получаем координаты нажатия относительно прогресс-бара
+          const { locationX } = e.nativeEvent;
+          const width = progressBarWidth.current;
+          if (width > 0) {
+            const seekPosition = locationX / width;
+            console.log(`Мини-плеер: перемотка на позицию: ${seekPosition.toFixed(2)} (${Math.floor(seekPosition * duration)} сек)`);
+            seekTo(seekPosition * duration);
+            e.stopPropagation(); // Предотвращаем всплытие события на родительский элемент
+          }
+        }}
+      >
+        <View style={styles.progressBar}>
+          <View 
+            style={[
+              styles.progress, 
+              { width: `${(position / (duration || 1)) * 100}%` }
+            ]} 
+          />
+        </View>
+      </TouchableOpacity>
         </Animated.View>
       </PanGestureHandler>
     </GestureHandlerRootView>
@@ -209,12 +232,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgb(0, 0, 0)',
   },
-  progressBar: {
-    height: 1,
+  progressBarContainer: {
     width: '100%',
+    height: 10,
     position: 'absolute',
     bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'flex-end',
+    zIndex: 10,
+  },
+  progressBar: {
+    width: '100%',
+    height: 2,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   progress: {
     height: '100%',

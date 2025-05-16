@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { Audio } from 'expo-av';
 import { Alert, Platform } from 'react-native';
 import { API_URL } from '@/constants/Config';
@@ -83,80 +83,68 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updatePlaybackStatus = (status: any) => {
-    setPlaybackStatus(status);
+    try {
+      setPlaybackStatus(status);
+    } catch (error) {
+      // Тихо игнорируем ошибку
+    }
   };
 
   const getAudioUri = (song: SongItem) => {
     if (!song) return null;
 
-    console.log('Получение URI для аудио:', song.title, song.audioFilePath);
-
-    // Для веб-версии используем полный URL с API_URL
-    if (song.audioFilePath) {
-      // Если путь начинается с http, используем его напрямую
-      if (song.audioFilePath.startsWith('http')) {
-        return song.audioFilePath;
-      }
-
-      // Иначе формируем URL с API_URL
-      const baseUrl = API_URL.replace(/\/$/, ''); // Удаляем слеш в конце, если есть
-      
-      // Если путь начинается с /assets/, удаляем этот префикс
-      if (song.audioFilePath.startsWith('/assets/')) {
-        const fileName = song.audioFilePath.substring(8); // Удаляем '/assets/'
-        const audioUrl = `${baseUrl}/assets/${fileName}`;
-        console.log('Сформирован URL для аудио:', audioUrl);
-        return audioUrl;
-      }
-      
-      // Если путь начинается с /storage/, это путь на устройстве
-      if (song.audioFilePath.startsWith('/storage/')) {
-        // Для мобильных устройств используем путь на сервере
-        const fileName = song.audioFilePath.split('/').pop();
-        const audioUrl = `${baseUrl}/assets/${fileName}`;
-        console.log('Сформирован URL для аудио из локального пути:', audioUrl);
-        return audioUrl;
-      }
-      
-      // Если путь начинается с /, используем его как есть
-      if (song.audioFilePath.startsWith('/')) {
-        const audioUrl = `${baseUrl}${song.audioFilePath}`;
-        console.log('Сформирован URL для аудио с абсолютным путем:', audioUrl);
-        return audioUrl;
-      }
-      
-      // Иначе добавляем слеш
-      const audioUrl = `${baseUrl}/assets/${song.audioFilePath}`;
-      console.log('Сформирован URL для аудио с относительным путем:', audioUrl);
-      return audioUrl;
+    // Проверяем наличие пути к аудиофайлу
+    if (!song.audioFilePath) {
+      return null;
     }
-    
-    return null;
+
+    // Если путь начинается с http, используем его напрямую
+    if (song.audioFilePath.startsWith('http')) {
+      return song.audioFilePath;
+    }
+
+    // Для всех остальных случаев формируем URL с API_URL
+    const baseUrl = API_URL.replace(/\/$/, ''); // Удаляем слеш в конце, если есть
+
+    // Используем только имя файла без пути
+    const fileName = song.audioFilePath.split('/').pop();
+    if (!fileName) {
+      return null;
+    }
+
+    // Формируем итоговый URL
+    const audioUrl = `${baseUrl}/assets/${fileName}`;
+    return audioUrl;
   };
 
+  // Максимально простой и надежный вариант воспроизведения песни
   const playSong = async (song: SongItem) => {
     try {
-      // Остановить текущее воспроизведение, если есть
-      if (playbackInstance) {
-        await playbackInstance.unloadAsync();
-      }
-
+      // Проверяем URI аудио
       const audioUri = getAudioUri(song);
       if (!audioUri) {
-        console.error('Не удалось получить URI аудио для песни:', song.title);
-        Alert.alert('Ошибка', `Не удалось загрузить аудио для песни: ${song.title}`);
+        // Тихо игнорируем ошибку
         return;
       }
 
-      console.log(`Загрузка аудио: ${audioUri}`);
-      
+      // Останавливаем текущий трек, если он есть
+      if (playbackInstance) {
+        try {
+          await playbackInstance.stopAsync();
+          await playbackInstance.unloadAsync();
+        } catch (stopError) {
+          // Тихо игнорируем ошибку
+        }
+      }
+
       // Создаем новый экземпляр звука
       const { sound } = await Audio.Sound.createAsync(
         { uri: audioUri },
-        { shouldPlay: true },
+        { shouldPlay: true, volume: 1.0 },
         updatePlaybackStatus
       );
       
+      // Устанавливаем новый трек как текущий
       setPlaybackInstance(sound);
       setCurrentSong(song);
       setIsPlaying(true);
@@ -169,11 +157,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           playNextSong();
         }
       });
-      
-      console.log(`Воспроизведение песни: ${song.title}`);
     } catch (error) {
-      console.error('Ошибка при воспроизведении песни:', error);
-      Alert.alert('Ошибка воспроизведения', `Не удалось воспроизвести песню: ${song.title}`);
+      // Тихо игнорируем ошибку
     }
   };
 

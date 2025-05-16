@@ -44,6 +44,9 @@ const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose 
     playPreviousSong
   } = useAudio();
   
+  // Сохраняем ширину прогресс-бара для перемотки
+  const progressBarWidth = useRef(0);
+  
   // Animation values for swipe
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(1);
@@ -156,19 +159,30 @@ const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose 
         <View style={styles.progressBar}>
           <View style={styles.progressTrack} />
           <View 
-            style={[styles.progressFill, { width: `${(position / duration) * 100}%` }]}
+            style={[styles.progressFill, { width: `${(position / (duration || 1)) * 100}%` }]}
           />
-          <Pressable 
-            style={[styles.progressThumb, { left: `${(position / duration) * 100}%` }]}
+          <TouchableOpacity 
+            style={styles.progressBarTouch}
+            activeOpacity={1}
+            onLayout={(e) => {
+              // Сохраняем ширину прогресс-бара при его изменении
+              progressBarWidth.current = e.nativeEvent.layout.width;
+            }}
             onPress={(e) => {
               // Получаем координаты нажатия относительно прогресс-бара
               const { locationX } = e.nativeEvent;
-              const progressBarWidth = e.currentTarget.measure((x, y, width) => {
+              const width = progressBarWidth.current;
+              if (width > 0) {
                 const seekPosition = locationX / width;
+                console.log(`Перемотка на позицию: ${seekPosition.toFixed(2)} (${Math.floor(seekPosition * duration)} сек)`);
                 handleSeek(seekPosition);
-              });
+              }
             }}
-          />
+          >
+            <Pressable 
+              style={[styles.progressThumb, { left: `${(position / (duration || 1)) * 100}%` }]}
+            />
+          </TouchableOpacity>
         </View>
         <View style={styles.timeContainer}>
           <Text style={styles.timeText}>{formatTime(Math.floor(position))}</Text>
@@ -224,6 +238,13 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 0,
     alignItems: 'center',
+  },
+  progressBarTouch: {
+    position: 'absolute',
+    width: '100%',
+    height: 40,
+    justifyContent: 'center',
+    zIndex: 10,
   },
   header: {
     width: '100%',

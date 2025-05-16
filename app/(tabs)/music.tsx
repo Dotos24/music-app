@@ -1,7 +1,7 @@
 import { FontFamily, Typography } from '@/constants/Typography';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert, Platform } from 'react-native';
 import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
@@ -207,48 +207,57 @@ export default function MusicScreen() {
     setIsPlayerVisible(true);
   };
 
-  // Загрузка изображения из папки assets
+  // Кэш для изображений
+  const imageCache = useRef<Record<string, any>>({});
+
+  // Загрузка изображения из папки assets с кэшированием
   const getImageSource = (assetName: string | undefined) => {
-    console.log(`getImageSource вызвана с именем файла:`, assetName);
-    
     // Если имя файла не передано, используем заглушку
     if (!assetName) {
-      console.log('Имя файла не передано, используем заглушку');
       return require('@/assets/photo_2025-05-14_21-35-54.jpg');
+    }
+    
+    // Проверяем кэш
+    if (imageCache.current[assetName]) {
+      return imageCache.current[assetName];
     }
     
     try {
       // Используем изображение из локальных ассетов Expo
       if (assetName === 'photo_2025-05-14_21-35-54.jpg') {
-        console.log('Используем локальный ассет для известного изображения');
-        return require('@/assets/photo_2025-05-14_21-35-54.jpg');
+        const image = require('@/assets/photo_2025-05-14_21-35-54.jpg');
+        imageCache.current[assetName] = image;
+        return image;
       }
       
-      if (Platform.OS === 'web') {
-        console.log('Загрузка для веб-версии');
-        
-        // Добавляем случайный параметр к URL для предотвращения кэширования
-        const timestamp = new Date().getTime();
-        
-        // Для веб-версии используем полный URL с API_URL
-        const baseUrl = API_URL.replace(/\/$/, ''); // Удаляем слеш в конце, если есть
-        console.log(`Используем доступ к серверу: ${baseUrl}/assets/${assetName}`);
-        return { uri: `${baseUrl}/assets/${assetName}?t=${timestamp}` };
-      }
-      
-      console.log('Загрузка для мобильной версии');
-      
-      // Для мобильных устройств используем полный URL с API_URL
-      const timestamp = new Date().getTime();
       const baseUrl = API_URL.replace(/\/$/, ''); // Удаляем слеш в конце, если есть
-      console.log(`Используем доступ к серверу для мобильного: ${baseUrl}/assets/${assetName}`);
-      return { uri: `${baseUrl}/assets/${assetName}?t=${timestamp}` };
+      const imageUrl = `${baseUrl}/assets/${assetName}`;
+      const image = { uri: imageUrl };
+      
+      // Сохраняем в кэш
+      imageCache.current[assetName] = image;
+      return image;
     } catch (error) {
       console.error(`Ошибка при загрузке изображения ${assetName}:`, error);
       // Плейсхолдер в случае ошибки
-      return require('@/assets/photo_2025-05-14_21-35-54.jpg');
+      const fallbackImage = require('@/assets/photo_2025-05-14_21-35-54.jpg');
+      imageCache.current[assetName] = fallbackImage;
+      return fallbackImage;
     }
   };
+
+  // Предварительная загрузка изображений для всех песен
+  useEffect(() => {
+    if (songs.length > 0) {
+      // Загружаем все обложки заранее
+      songs.forEach(song => {
+        const coverPath = getSongCoverPath(song);
+        if (coverPath) {
+          getImageSource(coverPath);
+        }
+      });
+    }
+  }, [songs]);
 
   // Функция для получения пути к обложке из разных возможных полей
   const getSongCoverPath = (song: SongItem) => {
