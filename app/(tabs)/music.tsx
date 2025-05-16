@@ -9,6 +9,7 @@ import MusicPlayerUI from '@/components/MusicPlayerUI';
 import MiniPlayerUI from '@/components/MiniPlayerUI';
 import axios from 'axios';
 import { API_URL } from '@/constants/Config';
+import { useAudio } from '@/contexts/AudioContext';
 
 interface SongItem {
   _id: string;
@@ -34,6 +35,9 @@ export default function MusicScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [songs, setSongs] = useState<SongItem[]>([]);
+  
+  // Используем аудио контекст
+  const { playSong, currentSong: audioContextSong, setCurrentSongPlaylist } = useAudio();
   
   // Функция для загрузки песен с сервера
   const fetchSongs = useCallback(async () => {
@@ -185,9 +189,18 @@ export default function MusicScreen() {
       )
     : songs;
 
+  // Устанавливаем текущий плейлист при изменении списка песен
+  useEffect(() => {
+    if (songs.length > 0) {
+      setCurrentSongPlaylist(songs);
+    }
+  }, [songs, setCurrentSongPlaylist]);
+
   const handleSongPress = (song: SongItem) => {
     setCurrentSong(song);
     setIsPlayerVisible(true);
+    // Воспроизведение выбранной песни
+    playSong(song);
   };
 
   const handleOpenPlayer = () => {
@@ -310,6 +323,13 @@ export default function MusicScreen() {
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
+
+  // Обновляем currentSong при изменении в аудио контексте
+  useEffect(() => {
+    if (audioContextSong) {
+      setCurrentSong(audioContextSong);
+    }
+  }, [audioContextSong]);
 
   return (
     <Animated.View

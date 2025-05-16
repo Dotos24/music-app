@@ -5,6 +5,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Typography } from '@/constants/Typography';
 import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
+import { useAudio } from '@/contexts/AudioContext';
 
 type Song = {
   id: string;
@@ -23,7 +24,9 @@ interface MiniPlayerUIProps {
 const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const [isPlaying, setIsPlaying] = useState(false);
+  
+  // Используем аудио контекст
+  const { isPlaying, position, duration, pauseSong, resumeSong } = useAudio();
   
   // Animation values for swipe
   const translateY = useSharedValue(0);
@@ -31,7 +34,11 @@ const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss })
   
   const togglePlayPause = (e: any) => {
     e.stopPropagation();
-    setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      pauseSong();
+    } else {
+      resumeSong();
+    }
   };
   
   const handleDismiss = () => {
@@ -138,7 +145,7 @@ const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss })
         <View 
           style={[
             styles.progress, 
-            { width: '30%' }
+            { width: `${(position / (duration || 1)) * 100}%` }
           ]} 
         />
       </View>

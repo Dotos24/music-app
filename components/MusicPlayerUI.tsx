@@ -6,6 +6,7 @@ import { FontFamily, Typography } from '@/constants/Typography';
 import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAudio } from '@/contexts/AudioContext';
 
 type Song = {
   id: string;
@@ -30,16 +31,33 @@ const formatTime = (seconds: number) => {
 const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [position, setPosition] = useState(30); // Mock position (30 seconds)
-  const [duration, setDuration] = useState(180); // Mock duration (3 minutes)
+  
+  // Используем аудио контекст
+  const { 
+    isPlaying, 
+    position, 
+    duration, 
+    pauseSong, 
+    resumeSong,
+    seekTo,
+    playNextSong,
+    playPreviousSong
+  } = useAudio();
   
   // Animation values for swipe
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(1);
   
   const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      pauseSong();
+    } else {
+      resumeSong();
+    }
+  };
+  
+  const handleSeek = (value: number) => {
+    seekTo(value * duration);
   };
   
   // Gesture handler for swipe
@@ -142,11 +160,19 @@ const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose 
           />
           <Pressable 
             style={[styles.progressThumb, { left: `${(position / duration) * 100}%` }]}
+            onPress={(e) => {
+              // Получаем координаты нажатия относительно прогресс-бара
+              const { locationX } = e.nativeEvent;
+              const progressBarWidth = e.currentTarget.measure((x, y, width) => {
+                const seekPosition = locationX / width;
+                handleSeek(seekPosition);
+              });
+            }}
           />
         </View>
         <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>{formatTime(position)}</Text>
-          <Text style={styles.timeText}>{formatTime(duration)}</Text>
+          <Text style={styles.timeText}>{formatTime(Math.floor(position))}</Text>
+          <Text style={styles.timeText}>{formatTime(Math.floor(duration))}</Text>
         </View>
       </View>
 
@@ -155,7 +181,10 @@ const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose 
           <Ionicons name="shuffle" size={22} color="#888888" />
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.primaryControlButton}>
+        <TouchableOpacity 
+          style={styles.primaryControlButton}
+          onPress={playPreviousSong}
+        >
           <Ionicons name="play-skip-back" size={28} color="#FFFFFF" />
         </TouchableOpacity>
         
@@ -169,7 +198,10 @@ const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose 
           </View>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.primaryControlButton}>
+        <TouchableOpacity 
+          style={styles.primaryControlButton}
+          onPress={playNextSong}
+        >
           <Ionicons name="play-skip-forward" size={28} color="#FFFFFF" />
         </TouchableOpacity>
         
