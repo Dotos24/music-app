@@ -97,8 +97,14 @@ const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss })
         onPress={onPress}
       >
         <Image 
-          source={typeof song.imageUrl === 'string' ? { uri: song.imageUrl } : song.imageUrl} 
+          source={typeof song.imageUrl === 'string' 
+            ? { uri: Platform.OS === 'web' 
+                ? `${song.imageUrl}?t=${new Date().getTime()}` // Добавляем timestamp для предотвращения кэширования
+                : song.imageUrl
+              } 
+            : song.imageUrl} 
           style={styles.albumArt} 
+          fadeDuration={0} // Убираем плавное появление, чтобы изображение обновлялось мгновенно
         />
         
         <View style={styles.songInfo}>

@@ -10,14 +10,17 @@ import MiniPlayerUI from '@/components/MiniPlayerUI';
 import axios from 'axios';
 import { API_URL } from '@/constants/Config';
 
-type SongItem = {
+interface SongItem {
   _id: string;
   title: string;
   artist: string;
   album?: string;
   duration: number;
-  coverAsset: string; // Имя файла в папке assets
-  audioAsset: string; // Имя файла в папке assets
+  coverAsset?: string;
+  coverFilePath?: string;
+  coverUrl?: string;
+  audioAsset?: string;
+  audioFilePath?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -192,28 +195,89 @@ export default function MusicScreen() {
   };
 
   // Загрузка изображения из папки assets
-  const getImageSource = (assetName: string) => {
+  const getImageSource = (assetName: string | undefined) => {
+    console.log(`getImageSource вызвана с именем файла:`, assetName);
+    
+    // Если имя файла не передано, используем заглушку
+    if (!assetName) {
+      console.log('Имя файла не передано, используем заглушку');
+      return require('@/assets/photo_2025-05-14_21-35-54.jpg');
+    }
+    
     try {
-      // Прямой require для статических ресурсов
+      // Используем изображение из локальных ассетов Expo
       if (assetName === 'photo_2025-05-14_21-35-54.jpg') {
+        console.log('Используем локальный ассет для известного изображения');
         return require('@/assets/photo_2025-05-14_21-35-54.jpg');
       }
       
-      // Добавьте другие изображения по мере необходимости
-      // if (assetName === 'другое-изображение.jpg') {
-      //   return require('@/assets/другое-изображение.jpg');
-      // }
+      if (Platform.OS === 'web') {
+        console.log('Загрузка для веб-версии');
+        
+        // Добавляем случайный параметр к URL для предотвращения кэширования
+        const timestamp = new Date().getTime();
+        
+        // Для веб-версии используем полный URL с API_URL
+        const baseUrl = API_URL.replace(/\/$/, ''); // Удаляем слеш в конце, если есть
+        console.log(`Используем доступ к серверу: ${baseUrl}/assets/${assetName}`);
+        return { uri: `${baseUrl}/assets/${assetName}?t=${timestamp}` };
+      }
       
-      // Для отладки
-      console.log(`Попытка загрузки изображения: ${assetName}`);
+      console.log('Загрузка для мобильной версии');
       
-      // Запасной вариант - плейсхолдер
-      return require('@/assets/photo_2025-05-14_21-35-54.jpg');
+      // Для мобильных устройств используем полный URL с API_URL
+      const timestamp = new Date().getTime();
+      const baseUrl = API_URL.replace(/\/$/, ''); // Удаляем слеш в конце, если есть
+      console.log(`Используем доступ к серверу для мобильного: ${baseUrl}/assets/${assetName}`);
+      return { uri: `${baseUrl}/assets/${assetName}?t=${timestamp}` };
     } catch (error) {
       console.error(`Ошибка при загрузке изображения ${assetName}:`, error);
       // Плейсхолдер в случае ошибки
       return require('@/assets/photo_2025-05-14_21-35-54.jpg');
     }
+  };
+
+  // Функция для получения пути к обложке из разных возможных полей
+  const getSongCoverPath = (song: SongItem) => {
+    console.log('Processing song:', JSON.stringify(song));
+    
+    // По приоритету проверяем разные возможные поля
+    if (song.coverAsset) {
+      console.log('Using coverAsset:', song.coverAsset);
+      return song.coverAsset;
+    } 
+    // @ts-ignore - Проверка полей, которых может не быть в интерфейсе SongItem
+    else if (song.coverFilePath) {
+      console.log('Using coverFilePath:', song.coverFilePath);
+      
+      // Если путь начинается с 'assets/' или '/assets'
+      if (song.coverFilePath.startsWith('assets/') || song.coverFilePath.startsWith('/assets/')) {
+        // Удаляем префиксы и получаем чистое имя файла
+        let fileName = song.coverFilePath;
+        if (fileName.startsWith('/')) {
+          fileName = fileName.substring(1);
+        }
+        if (fileName.startsWith('assets/')) {
+          fileName = fileName.substring(7);
+        }
+        console.log('Using web path for coverFilePath:', fileName);
+        return fileName;
+      }
+      
+      // Извлекаем имя файла из пути
+      const fileName = song.coverFilePath.split('/').pop();
+      console.log('Extracted filename:', fileName);
+      return fileName || 'photo_2025-05-14_21-35-54.jpg';
+    }
+    // @ts-ignore - Проверка поля coverUrl
+    else if (song.coverUrl && song.coverUrl.length > 0) {
+      console.log('Using coverUrl:', song.coverUrl);
+      return song.coverUrl;
+    }
+    
+    // Если ничего не нашли, используем заглушку
+    console.log('Using default image');
+    return 'photo_2025-05-14_21-35-54.jpg';
   };
 
   const renderSongItem = ({ item }: { item: SongItem }) => (
@@ -223,7 +287,7 @@ export default function MusicScreen() {
       onPress={() => handleSongPress(item)}
     >
       <Image 
-        source={getImageSource(item.coverAsset)}
+        source={getImageSource(getSongCoverPath(item))}
         style={styles.songImage} 
         onError={(e) => console.log(`Ошибка загрузки изображения:`, e.nativeEvent.error)}
       />
@@ -252,15 +316,15 @@ export default function MusicScreen() {
       style={[styles.container, { backgroundColor: isDark ? '#000000' : '#FFFFFF' }]}
       entering={FadeIn.duration(350).springify()}
     >
-      {isPlayerVisible ? (
+      {isPlayerVisible && currentSong ? (
         <MusicPlayerUI
-          song={currentSong ? {
+          song={{
             id: currentSong._id,
             title: currentSong.title,
             artist: currentSong.artist,
-            imageUrl: getImageSource(currentSong.coverAsset),
+            imageUrl: getImageSource(getSongCoverPath(currentSong)),
             duration: formatDuration(currentSong.duration)
-          } : null}
+          }}
           isVisible={isPlayerVisible}
           onClose={() => setIsPlayerVisible(false)}
         />
@@ -341,7 +405,7 @@ export default function MusicScreen() {
                 id: currentSong._id,
                 title: currentSong.title,
                 artist: currentSong.artist,
-                imageUrl: getImageSource(currentSong.coverAsset),
+                imageUrl: getImageSource(getSongCoverPath(currentSong)),
                 duration: formatDuration(currentSong.duration)
               }}
               onPress={handleOpenPlayer}

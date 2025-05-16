@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Добавить новый трек</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 10px;
+    }
+    .container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .help {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      font-style: italic;
+    }
+    button {
+      background-color: #1DB954;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #1AA34A;
+    }
+    .error {
+      color: #721c24;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .back {
+      display: inline-block;
+      margin-bottom: 20px;
+      text-decoration: none;
+      color: #666;
+    }
+    .back:hover {
+      text-decoration: underline;
+    }
+    .preview {
+      max-width: 200px;
+      max-height: 200px;
+      margin-top: 10px;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/admin" class="back">← Назад к списку</a>
+    
+    <h1>Добавить новый трек</h1>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="error"><%= error %></div>
+    <% } %>
+    
+    <form action="/admin/add" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="title">Название трека:</label>
+        <input type="text" id="title" name="title" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="artist">Исполнитель:</label>
+        <input type="text" id="artist" name="artist" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="album">Альбом (необязательно):</label>
+        <input type="text" id="album" name="album">
+      </div>
+      
+      <div class="form-group">
+        <label for="duration">Длительность (секунды):</label>
+        <input type="number" id="duration" name="duration" min="1" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="coverAsset">Путь к обложке (в папке assets):</label>
+        <input type="text" id="coverAsset" name="coverAsset" placeholder="cover.jpg" required>
+        <p class="help">Введите имя файла обложки, расположенного в папке assets</p>
+      </div>
+      
+      <div class="form-group">
+        <label for="audioAsset">Путь к аудиофайлу (в папке assets):</label>
+        <input type="text" id="audioAsset" name="audioAsset" placeholder="song.mp3" required>
+        <p class="help">Введите имя аудиофайла, расположенного в папке assets</p>
+      </div>
+      
+      <button type="submit">Сохранить трек</button>
+    </form>
+  </div>
+</body>
+</html>
