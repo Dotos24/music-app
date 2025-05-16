@@ -11,7 +11,7 @@ type Song = {
   id: string;
   title: string;
   artist: string;
-  imageUrl: string;
+  imageUrl: any; // Может быть как URI, так и объект из require()
   duration: string;
 };
 
@@ -100,14 +100,14 @@ const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose 
       <View style={styles.albumArtContainer}>
         <View style={styles.albumBackgroundWrapper}>
           <Image 
-            source={{ uri: song.imageUrl }}
+            source={typeof song.imageUrl === 'string' ? { uri: song.imageUrl } : song.imageUrl}
             style={styles.albumBackgroundImage}
             blurRadius={150}
             resizeMode="cover"
           />
         </View>
         <Image
-          source={{ uri: song.imageUrl }}
+          source={typeof song.imageUrl === 'string' ? { uri: song.imageUrl } : song.imageUrl}
           style={styles.albumArt}
           resizeMode="cover"
         />

@@ -2,7 +2,7 @@ import { FontFamily, Typography } from '@/constants/Typography';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useEffect, useCallback } from 'react';
-import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
+import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert, Platform } from 'react-native';
 import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import MusicPlayerUI from '@/components/MusicPlayerUI';
@@ -16,8 +16,8 @@ type SongItem = {
   artist: string;
   album?: string;
   duration: number;
-  coverUrl: string;
-  audioUrl: string;
+  coverAsset: string; // Имя файла в папке assets
+  audioAsset: string; // Имя файла в папке assets
   createdAt: string;
   updatedAt: string;
 };
@@ -66,8 +66,8 @@ export default function MusicScreen() {
           artist: 'Океан Ельзи',
           album: 'Без меж',
           duration: 225,
-          coverUrl: 'https://i.scdn.co/image/ab67616d0000b2732b4f6acf3a36bd7483eaa5df',
-          audioUrl: 'https://example.com/audio1.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio1.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -77,8 +77,8 @@ export default function MusicScreen() {
           artist: 'Океан Ельзи',
           album: 'Земля',
           duration: 252,
-          coverUrl: 'https://upload.wikimedia.org/wikipedia/uk/b/bc/%D0%97%D0%B5%D0%BC%D0%BB%D1%8F_%28%D0%9E._%D0%95.%29.jpg',
-          audioUrl: 'https://example.com/audio2.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio2.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -88,8 +88,8 @@ export default function MusicScreen() {
           artist: 'The Hardkiss',
           album: 'Залізна ластівка',
           duration: 238,
-          coverUrl: 'https://cdn-images.dzcdn.net/images/cover/a97b21665fb9fe4ff5ebad8a18b9ac51/0x1900-000000-80-0-0.jpg',
-          audioUrl: 'https://example.com/audio3.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio3.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -99,8 +99,8 @@ export default function MusicScreen() {
           artist: 'The Hardkiss',
           album: 'Залізна ластівка',
           duration: 245,
-          coverUrl: 'https://cdn-images.dzcdn.net/images/cover/61d19098c0eb0654ff58de5be9c83707/0x1900-000000-80-0-0.jpg',
-          audioUrl: 'https://example.com/audio4.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio4.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -110,8 +110,8 @@ export default function MusicScreen() {
           artist: 'KAZKA',
           album: 'NIRVANA',
           duration: 210,
-          coverUrl: 'https://f4.bcbits.com/img/a1593755960_10.jpg',
-          audioUrl: 'https://example.com/audio5.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio5.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -121,8 +121,8 @@ export default function MusicScreen() {
           artist: 'KAZKA',
           album: 'KARMA',
           duration: 202,
-          coverUrl: 'https://quals.ua/image/cache/catalog/Covers/kazka-karma-vinyl-2000x2000.jpg',
-          audioUrl: 'https://example.com/audio6.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio6.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -132,8 +132,8 @@ export default function MusicScreen() {
           artist: 'Океан Ельзи',
           album: 'Без меж',
           duration: 275,
-          coverUrl: 'https://i.scdn.co/image/ab67616d0000b273662efff81c9deae5d06f7184',
-          audioUrl: 'https://example.com/audio7.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio7.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -143,8 +143,8 @@ export default function MusicScreen() {
           artist: 'Океан Ельзи',
           album: 'Gloria',
           duration: 218,
-          coverUrl: 'https://images.genius.com/a19afaf21a5c3a3eb52b6371cf8641ed.500x500x1.jpg',
-          audioUrl: 'https://example.com/audio8.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio8.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -154,8 +154,8 @@ export default function MusicScreen() {
           artist: 'Христина Соловій',
           album: 'Любий друг',
           duration: 195,
-          coverUrl: 'https://rock.ua/rockdb/i/cd/full/1154-lyubiy_drug.jpg',
-          audioUrl: 'https://example.com/audio9.mp3',
+          coverAsset: 'photo_2025-05-14_21-35-54.jpg',
+          audioAsset: 'audio9.mp3',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
@@ -191,13 +191,42 @@ export default function MusicScreen() {
     setIsPlayerVisible(true);
   };
 
+  // Загрузка изображения из папки assets
+  const getImageSource = (assetName: string) => {
+    try {
+      // Прямой require для статических ресурсов
+      if (assetName === 'photo_2025-05-14_21-35-54.jpg') {
+        return require('@/assets/photo_2025-05-14_21-35-54.jpg');
+      }
+      
+      // Добавьте другие изображения по мере необходимости
+      // if (assetName === 'другое-изображение.jpg') {
+      //   return require('@/assets/другое-изображение.jpg');
+      // }
+      
+      // Для отладки
+      console.log(`Попытка загрузки изображения: ${assetName}`);
+      
+      // Запасной вариант - плейсхолдер
+      return require('@/assets/photo_2025-05-14_21-35-54.jpg');
+    } catch (error) {
+      console.error(`Ошибка при загрузке изображения ${assetName}:`, error);
+      // Плейсхолдер в случае ошибки
+      return require('@/assets/photo_2025-05-14_21-35-54.jpg');
+    }
+  };
+
   const renderSongItem = ({ item }: { item: SongItem }) => (
     <TouchableOpacity 
       style={styles.songItem} 
       activeOpacity={0.7}
       onPress={() => handleSongPress(item)}
     >
-      <Image source={{ uri: item.coverUrl }} style={styles.songImage} />
+      <Image 
+        source={getImageSource(item.coverAsset)}
+        style={styles.songImage} 
+        onError={(e) => console.log(`Ошибка загрузки изображения:`, e.nativeEvent.error)}
+      />
       <View style={styles.songInfo}>
         <Text style={[styles.songTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>{item.title}</Text>
         <Text style={styles.songArtist}>{item.artist}</Text>
@@ -225,7 +254,13 @@ export default function MusicScreen() {
     >
       {isPlayerVisible ? (
         <MusicPlayerUI
-          song={currentSong}
+          song={currentSong ? {
+            id: currentSong._id,
+            title: currentSong.title,
+            artist: currentSong.artist,
+            imageUrl: getImageSource(currentSong.coverAsset),
+            duration: formatDuration(currentSong.duration)
+          } : null}
           isVisible={isPlayerVisible}
           onClose={() => setIsPlayerVisible(false)}
         />
@@ -306,7 +341,7 @@ export default function MusicScreen() {
                 id: currentSong._id,
                 title: currentSong.title,
                 artist: currentSong.artist,
-                imageUrl: currentSong.coverUrl,
+                imageUrl: getImageSource(currentSong.coverAsset),
                 duration: formatDuration(currentSong.duration)
               }}
               onPress={handleOpenPlayer}

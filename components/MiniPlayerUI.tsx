@@ -10,7 +10,7 @@ type Song = {
   id: string;
   title: string;
   artist: string;
-  imageUrl: string;
+  imageUrl: any; // Может быть как URI, так и объект из require()
   duration: string;
 };
 
@@ -96,7 +96,10 @@ const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss })
         activeOpacity={0.7} 
         onPress={onPress}
       >
-        <Image source={{ uri: song.imageUrl }} style={styles.albumArt} />
+        <Image 
+          source={typeof song.imageUrl === 'string' ? { uri: song.imageUrl } : song.imageUrl} 
+          style={styles.albumArt} 
+        />
         
         <View style={styles.songInfo}>
           <Text 

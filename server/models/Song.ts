@@ -3,9 +3,9 @@ import mongoose from 'mongoose';
 export interface ISong extends mongoose.Document {
   title: string;
   artist: string;
-  coverUrl: string;
+  coverAsset: string; // Имя файла в папке assets
   album?: string;
-  audioUrl: string;
+  audioAsset: string; // Имя файла в папке assets
   duration: number;
   createdAt: Date;
   updatedAt: Date;
@@ -22,7 +22,7 @@ const songSchema = new mongoose.Schema<ISong>({
     required: true,
     trim: true
   },
-  coverUrl: {
+  coverAsset: {
     type: String,
     required: true,
     trim: true
@@ -31,7 +31,7 @@ const songSchema = new mongoose.Schema<ISong>({
     type: String,
     trim: true
   },
-  audioUrl: {
+  audioAsset: {
     type: String,
     required: true,
     trim: true
