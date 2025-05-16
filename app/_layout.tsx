@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { AudioProvider } from '@/contexts/AudioContext';
+import { LikesProvider } from '@/contexts/LikesContext';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -28,14 +29,16 @@ export default function RootLayout() {
     <AuthProvider>
       <ProfileProvider>
         <AudioProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack>
-              <Stack.Screen name="auth" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
+          <LikesProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack>
+                <Stack.Screen name="auth" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </LikesProvider>
         </AudioProvider>
       </ProfileProvider>
     </AuthProvider>
