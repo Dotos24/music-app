@@ -5,8 +5,6 @@ import path from 'path';
 import connectDB from '../config/db';
 import authRoutes from './auth/routes';
 import songsRoutes from './songs/routes';
-import playlistsRoutes from './playlists/routes';
-import likedSongsRoutes from './liked-songs/routes';
 // @ts-ignore - Импортируем админ-маршруты
 const adminRoutes = require('../admin');
 
@@ -34,8 +32,6 @@ app.use('/assets', express.static(path.join(__dirname, '../../assets')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/songs', songsRoutes);
-app.use('/api/playlists', playlistsRoutes);
-app.use('/api/liked-songs', likedSongsRoutes);
 
 // Администраторский интерфейс с простой защитой
 app.use('/admin', (req, res, next) => {
