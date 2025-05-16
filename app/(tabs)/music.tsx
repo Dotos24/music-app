@@ -10,6 +10,7 @@ import MiniPlayerUI from '@/components/MiniPlayerUI';
 import axios from 'axios';
 import { API_URL } from '@/constants/Config';
 import { useAudio } from '@/contexts/AudioContext';
+import { useLikes } from '@/contexts/LikesContext';
 
 interface SongItem {
   _id: string;
@@ -302,6 +303,9 @@ export default function MusicScreen() {
     return 'photo_2025-05-14_21-35-54.jpg';
   };
 
+  // Используем контекст лайков
+  const { isLiked, toggleLike } = useLikes();
+
   const renderSongItem = ({ item }: { item: SongItem }) => (
     <TouchableOpacity 
       style={styles.songItem} 
@@ -311,7 +315,7 @@ export default function MusicScreen() {
       <Image 
         source={getImageSource(getSongCoverPath(item))}
         style={styles.songImage} 
-        onError={(e) => console.log(`Ошибка загрузки изображения:`, e.nativeEvent.error)}
+        onError={(e) => {}}
       />
       <View style={styles.songInfo}>
         <Text style={[styles.songTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>{item.title}</Text>
@@ -320,6 +324,19 @@ export default function MusicScreen() {
       </View>
       <View style={styles.songDetails}>
         <Text style={styles.songDuration}>{formatDuration(item.duration)}</Text>
+        <TouchableOpacity 
+          style={styles.likeButton}
+          onPress={(e) => {
+            e.stopPropagation(); // Предотвращаем всплытие события на родительский элемент
+            toggleLike(item);
+          }}
+        >
+          <Ionicons 
+            name={isLiked(item._id) ? "heart" : "heart-outline"} 
+            size={22} 
+            color={isLiked(item._id) ? "#ff3b5c" : isDark ? '#FFFFFF' : '#000000'} 
+          />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.moreButton}>
           <Ionicons name="ellipsis-horizontal" size={20} color={isDark ? '#FFFFFF' : '#000000'} />
         </TouchableOpacity>
@@ -412,10 +429,10 @@ export default function MusicScreen() {
               data={filteredSongs}
               renderItem={renderSongItem}
               keyExtractor={item => item._id}
-              contentContainerStyle={[
-                styles.listContainer,
-                currentSong ? { paddingBottom: 70 } : {}
-              ]}
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingBottom: currentSong ? 70 : 20
+              }}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <Animated.View entering={SlideInRight.duration(300).springify()} style={styles.emptyContainer}>
@@ -590,13 +607,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  likeButton: {
+    padding: 8,
+    marginRight: 5,
+  },
   songDuration: {
     ...Typography.caption,
     color: '#888888',
     marginRight: 15,
   },
   moreButton: {
-    padding: 5,
+    padding: 8,
   },
   emptyContainer: {
     alignItems: 'center',

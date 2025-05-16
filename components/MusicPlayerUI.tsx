@@ -121,30 +121,20 @@ const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose 
       <View style={styles.albumArtContainer}>
         <View style={styles.albumBackgroundWrapper}>
           <Image 
-            source={typeof song.imageUrl === 'string' 
-              ? { uri: Platform.OS === 'web' 
-                  ? `${song.imageUrl}?t=${new Date().getTime()}` // Добавляем timestamp для предотвращения кэширования
-                  : song.imageUrl
-                } 
-              : song.imageUrl
-            }
+            source={song.imageUrl}
             style={styles.albumBackgroundImage}
             blurRadius={150}
             resizeMode="cover"
             fadeDuration={0} // Убираем плавное появление, чтобы изображение обновлялось мгновенно
+            defaultSource={require('@/assets/photo_2025-05-14_21-35-54.jpg')}
           />
         </View>
         <Image
-          source={typeof song.imageUrl === 'string' 
-            ? { uri: Platform.OS === 'web' 
-                ? `${song.imageUrl}?t=${new Date().getTime()+1}` // Используем другой timestamp для этого изображения
-                : song.imageUrl
-              } 
-            : song.imageUrl
-          }
+          source={song.imageUrl}
           style={styles.albumArt}
           resizeMode="cover"
           fadeDuration={0} // Убираем плавное появление
+          defaultSource={require('@/assets/photo_2025-05-14_21-35-54.jpg')}
         />
       </View>
 
