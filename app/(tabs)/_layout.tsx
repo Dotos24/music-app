@@ -1,11 +1,13 @@
 import * as Haptics from 'expo-haptics';
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Dimensions, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Tabs, Redirect } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, Platform, StyleSheet, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Custom tab button component with haptic feedback
 type IconName = 'house.fill' | 'heart.fill' | 'music.note' | 'music.note.list';
@@ -113,25 +115,67 @@ const CustomTabBar = ({ state, descriptors, navigation }: TabBarProps) => {
   );
 };
 
+// Компонент для проверки авторизации
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  const [isCheckingStorage, setIsCheckingStorage] = useState(true);
+  const [hasToken, setHasToken] = useState(false);
+
+  useEffect(() => {
+    // Проверяем, есть ли токен в AsyncStorage
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        setHasToken(!!token);
+      } catch (error) {
+        console.error('Ошибка при проверке токена:', error);
+      } finally {
+        setIsCheckingStorage(false);
+      }
+    };
+
+    checkToken();
+  }, []);
+
+  // Показываем индикатор загрузки, пока проверяем авторизацию
+  if (isLoading || isCheckingStorage) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1DB954" />
+      </View>
+    );
+  }
+
+  // Если пользователь не авторизован, перенаправляем на страницу входа
+  if (!user && !hasToken) {
+    return <Redirect href="/auth/login" />;
+  }
+
+  // Если пользователь авторизован, показываем основной контент
+  return <>{children}</>;
+}
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
   return (
-    <View style={styles.container}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarShowLabel: false,
-        }}
-        tabBar={props => <CustomTabBar {...props} />}
-      >
-        <Tabs.Screen name="index" options={{ title: 'Home' }} />
-        <Tabs.Screen name="favorites" options={{ title: 'Favorites' }} />
-        <Tabs.Screen name="music" options={{ title: 'Music' }} />
-        <Tabs.Screen name="library" options={{ title: 'Library' }} />
-      </Tabs>
-    </View>
+    <AuthGuard>
+      <View style={styles.container}>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarShowLabel: false,
+          }}
+          tabBar={props => <CustomTabBar {...props} />}
+        >
+          <Tabs.Screen name="index" options={{ title: 'Home' }} />
+          <Tabs.Screen name="favorites" options={{ title: 'Favorites' }} />
+          <Tabs.Screen name="music" options={{ title: 'Music' }} />
+          <Tabs.Screen name="library" options={{ title: 'Library' }} />
+        </Tabs>
+      </View>
+    </AuthGuard>
   );
 }
 
@@ -139,6 +183,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0a0a0a',
   },
   tabBarContainer: {
     flexDirection: 'row',

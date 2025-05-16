@@ -1,13 +1,19 @@
 import express from 'express';
 import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+import connectDB from '../config/db';
 import authRoutes from './auth/routes';
 import songsRoutes from './songs/routes';
 import playlistsRoutes from './playlists/routes';
 import likedSongsRoutes from './liked-songs/routes';
 
+// Загружаем переменные окружения
+dotenv.config();
+
+// Подключаемся к MongoDB
+connectDB();
+
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -31,8 +37,7 @@ app.listen(PORT, () => {
 });
 
 // Handle shutdown
-process.on('SIGINT', async () => {
-  await prisma.$disconnect();
+process.on('SIGINT', () => {
   console.log('Server shut down');
   process.exit(0);
 });

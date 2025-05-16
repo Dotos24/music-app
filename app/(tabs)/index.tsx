@@ -1,7 +1,9 @@
 import { FontFamily, Typography } from "@/constants/Typography";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -28,7 +30,7 @@ const GenreCard = ({ title, colors, image }: GenreCardProps) => {
     <TouchableOpacity style={styles.cardContainer} activeOpacity={0.7}>
       <View style={{ borderRadius: 12, overflow: 'hidden', flex: 1 }}>
         <ImageBackground
-          source={image}
+          source={typeof image === 'string' ? { uri: image } : image}
           style={{ width: '100%', height: '100%' }}
           imageStyle={{ borderRadius: 12 }}
           resizeMode="cover"
@@ -76,6 +78,8 @@ const GenreCard = ({ title, colors, image }: GenreCardProps) => {
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const router = useRouter();
+  const { avatar } = useProfile();
 
   const genres = [
     { title: "Хіп-хоп", image: require("../../assets/starboy.jpg") },
@@ -100,9 +104,7 @@ export default function HomeScreen() {
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View style={styles.header}>
         <View
-          style={styles.headerRow}
-          flexDirection="row"
-          justifyContent="space-between"
+          style={[styles.headerRow, { flexDirection: 'row', justifyContent: 'space-between' }]}
         >
           <Text
             style={[
@@ -112,14 +114,19 @@ export default function HomeScreen() {
           >
             Доброго дня 👋{" "}
           </Text>
-          <Image
-            source={require("@/assets/kizaru_12.jpg")}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 50,
-            }}
-          />
+          <TouchableOpacity
+            onPress={() => router.push('/profile')}
+            activeOpacity={0.7}
+          >
+            <Image
+              source={avatar ? { uri: avatar } : require("@/assets/kizaru_12.jpg")}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 50,
+              }}
+            />
+          </TouchableOpacity>
         </View>
         <View></View>
       </View>

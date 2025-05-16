@@ -1,20 +1,25 @@
 import { FontFamily, Typography } from '@/constants/Typography';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert } from 'react-native';
 import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import MusicPlayerUI from '@/components/MusicPlayerUI';
 import MiniPlayerUI from '@/components/MiniPlayerUI';
+import axios from 'axios';
+import { API_URL } from '@/constants/Config';
 
 type SongItem = {
-  id: string;
+  _id: string;
   title: string;
   artist: string;
-  album: string;
-  duration: string;
-  imageUrl: string;
+  album?: string;
+  duration: number;
+  coverUrl: string;
+  audioUrl: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export default function MusicScreen() {
@@ -23,110 +28,163 @@ export default function MusicScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSong, setCurrentSong] = useState<SongItem | null>(null);
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
-  const [songs, setSongs] = useState<SongItem[]>([
-    {
-      id: '1',
-      title: 'Місто весни',
-      artist: 'Океан Ельзи',
-      album: 'Без меж',
-      duration: '3:45',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b2732b4f6acf3a36bd7483eaa5df'
-    },
-    {
-      id: '2',
-      title: 'Обійми',
-      artist: 'Океан Ельзи',
-      album: 'Земля',
-      duration: '4:12',
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/uk/b/bc/%D0%97%D0%B5%D0%BC%D0%BB%D1%8F_%28%D0%9E._%D0%95.%29.jpg'
-    },
-    {
-      id: '3',
-      title: 'Квітка',
-      artist: 'The Hardkiss',
-      album: 'Залізна ластівка',
-      duration: '3:58',
-      imageUrl: 'https://cdn-images.dzcdn.net/images/cover/a97b21665fb9fe4ff5ebad8a18b9ac51/0x1900-000000-80-0-0.jpg'
-    },
-    {
-      id: '4',
-      title: 'Журавлі',
-      artist: 'The Hardkiss',
-      album: 'Залізна ластівка',
-      duration: '4:05',
-      imageUrl: 'https://cdn-images.dzcdn.net/images/cover/61d19098c0eb0654ff58de5be9c83707/0x1900-000000-80-0-0.jpg'
-    },
-    {
-      id: '5',
-      title: 'Мало мені',
-      artist: 'KAZKA',
-      album: 'NIRVANA',
-      duration: '3:30',
-      imageUrl: 'https://f4.bcbits.com/img/a1593755960_10.jpg'
-    },
-    {
-      id: '6',
-      title: 'Плакала',
-      artist: 'KAZKA',
-      album: 'KARMA',
-      duration: '3:22',
-      imageUrl: 'https://quals.ua/image/cache/catalog/Covers/kazka-karma-vinyl-2000x2000.jpg'
-    },
-    {
-      id: '7',
-      title: 'Не твоя війна',
-      artist: 'Океан Ельзи',
-      album: 'Без меж',
-      duration: '4:35',
-      imageUrl: 'https://i.scdn.co/image/ab67616d0000b273662efff81c9deae5d06f7184'
-    },
-    {
-      id: '8',
-      title: 'Без бою',
-      artist: 'Океан Ельзи',
-      album: 'Gloria',
-      duration: '3:38',
-      imageUrl: 'https://images.genius.com/a19afaf21a5c3a3eb52b6371cf8641ed.500x500x1.jpg'
-    },
-    {
-      id: '9',
-      title: 'Коханці',
-      artist: 'Христина Соловій',
-      album: 'Любий друг',
-      duration: '3:15',
-      imageUrl: 'https://rock.ua/rockdb/i/cd/full/1154-lyubiy_drug.jpg'
-    },
-    {
-      id: '10',
-      title: 'Тримай',
-      artist: 'Христина Соловій',
-      album: 'Любий друг',
-      duration: '3:20',
-      imageUrl: 'https://cdn-images.dzcdn.net/images/cover/d5898c4bb498bb94f542d4ce4b27ef50/1900x1900-000000-80-0-0.jpg'
-    },
-  ]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [songs, setSongs] = useState<SongItem[]>([]);
+  
+  // Функция для загрузки песен с сервера
+  const fetchSongs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    console.log('Пытаемся загрузить песни с:', `${API_URL}/api/songs`);
+    
+    try {
+      const response = await axios.get(`${API_URL}/api/songs`);
+      console.log('Получены данные:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        console.log('Данные являются массивом, длина:', response.data.length);
+        setSongs(response.data);
+      } else {
+        console.error('Полученные данные не являются массивом:', typeof response.data);
+        setError('Неправильный формат данных от сервера');
+      }
+      
+      setLoading(false);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Неизвестная ошибка';
+      const statusCode = err.response?.status || 'нет статус-кода';
+      console.error(`Ошибка при загрузке песен: ${errorMessage}, Статус: ${statusCode}`);
+      setError(`Не удалось загрузить песни: ${errorMessage}. Проверьте, что сервер запущен по адресу ${API_URL}`);
+      setLoading(false);
+      // Используем тестовые данные в случае ошибки
+      setSongs([
+        {
+          _id: '1',
+          title: 'Місто весни',
+          artist: 'Океан Ельзи',
+          album: 'Без меж',
+          duration: 225,
+          coverUrl: 'https://i.scdn.co/image/ab67616d0000b2732b4f6acf3a36bd7483eaa5df',
+          audioUrl: 'https://example.com/audio1.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: '2',
+          title: 'Обійми',
+          artist: 'Океан Ельзи',
+          album: 'Земля',
+          duration: 252,
+          coverUrl: 'https://upload.wikimedia.org/wikipedia/uk/b/bc/%D0%97%D0%B5%D0%BC%D0%BB%D1%8F_%28%D0%9E._%D0%95.%29.jpg',
+          audioUrl: 'https://example.com/audio2.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: '3',
+          title: 'Квітка',
+          artist: 'The Hardkiss',
+          album: 'Залізна ластівка',
+          duration: 238,
+          coverUrl: 'https://cdn-images.dzcdn.net/images/cover/a97b21665fb9fe4ff5ebad8a18b9ac51/0x1900-000000-80-0-0.jpg',
+          audioUrl: 'https://example.com/audio3.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: '4',
+          title: 'Журавлі',
+          artist: 'The Hardkiss',
+          album: 'Залізна ластівка',
+          duration: 245,
+          coverUrl: 'https://cdn-images.dzcdn.net/images/cover/61d19098c0eb0654ff58de5be9c83707/0x1900-000000-80-0-0.jpg',
+          audioUrl: 'https://example.com/audio4.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: '5',
+          title: 'Мало мені',
+          artist: 'KAZKA',
+          album: 'NIRVANA',
+          duration: 210,
+          coverUrl: 'https://f4.bcbits.com/img/a1593755960_10.jpg',
+          audioUrl: 'https://example.com/audio5.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: '6',
+          title: 'Плакала',
+          artist: 'KAZKA',
+          album: 'KARMA',
+          duration: 202,
+          coverUrl: 'https://quals.ua/image/cache/catalog/Covers/kazka-karma-vinyl-2000x2000.jpg',
+          audioUrl: 'https://example.com/audio6.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: '7',
+          title: 'Не твоя війна',
+          artist: 'Океан Ельзи',
+          album: 'Без меж',
+          duration: 275,
+          coverUrl: 'https://i.scdn.co/image/ab67616d0000b273662efff81c9deae5d06f7184',
+          audioUrl: 'https://example.com/audio7.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: '8',
+          title: 'Без бою',
+          artist: 'Океан Ельзи',
+          album: 'Gloria',
+          duration: 218,
+          coverUrl: 'https://images.genius.com/a19afaf21a5c3a3eb52b6371cf8641ed.500x500x1.jpg',
+          audioUrl: 'https://example.com/audio8.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: '9',
+          title: 'Коханці',
+          artist: 'Христина Соловій',
+          album: 'Любий друг',
+          duration: 195,
+          coverUrl: 'https://rock.ua/rockdb/i/cd/full/1154-lyubiy_drug.jpg',
+          audioUrl: 'https://example.com/audio9.mp3',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ]);
+    }
+  }, []);
+  
+  useEffect(() => {
+    fetchSongs();
+  }, [fetchSongs]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchSongs();
+    }, [fetchSongs])
+  );
 
-  const filteredSongs = songs.filter(song => {
-    const query = searchQuery.toLowerCase();
-    return (
-      song.title.toLowerCase().includes(query) ||
-      song.artist.toLowerCase().includes(query) ||
-      song.album.toLowerCase().includes(query)
-    );
-  });
+  const filteredSongs = searchQuery
+    ? songs.filter(
+        (song) =>
+          song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (song.album && song.album.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : songs;
 
   const handleSongPress = (song: SongItem) => {
     setCurrentSong(song);
-    setIsPlayerVisible(false);
-    // Delay to create a nice effect
-    setTimeout(() => {
-      setIsPlayerVisible(true);
-    }, 100);
-  };
-
-  const handleClosePlayer = () => {
-    setIsPlayerVisible(false);
+    setIsPlayerVisible(true);
   };
 
   const handleOpenPlayer = () => {
@@ -139,13 +197,14 @@ export default function MusicScreen() {
       activeOpacity={0.7}
       onPress={() => handleSongPress(item)}
     >
-      <Image source={{ uri: item.imageUrl }} style={styles.songImage} />
+      <Image source={{ uri: item.coverUrl }} style={styles.songImage} />
       <View style={styles.songInfo}>
         <Text style={[styles.songTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>{item.title}</Text>
         <Text style={styles.songArtist}>{item.artist}</Text>
+        {item.album && <Text style={styles.songArtist}>{item.album}</Text>}
       </View>
       <View style={styles.songDetails}>
-        <Text style={styles.songDuration}>{item.duration}</Text>
+        <Text style={styles.songDuration}>{formatDuration(item.duration)}</Text>
         <TouchableOpacity style={styles.moreButton}>
           <Ionicons name="ellipsis-horizontal" size={20} color={isDark ? '#FFFFFF' : '#000000'} />
         </TouchableOpacity>
@@ -153,23 +212,29 @@ export default function MusicScreen() {
     </TouchableOpacity>
   );
 
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
   return (
-    <Animated.View 
+    <Animated.View
       style={[styles.container, { backgroundColor: isDark ? '#000000' : '#FFFFFF' }]}
       entering={FadeIn.duration(350).springify()}
     >
       {isPlayerVisible ? (
-        <MusicPlayerUI 
-          song={currentSong} 
-          isVisible={isPlayerVisible} 
-          onClose={handleClosePlayer} 
+        <MusicPlayerUI
+          song={currentSong}
+          isVisible={isPlayerVisible}
+          onClose={() => setIsPlayerVisible(false)}
         />
       ) : (
         <SafeAreaView style={{ flex: 1 }}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#000000' }]}>Музика</Text>
           </View>
-          
+
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color="#888888" style={styles.searchIcon} />
             <TextInput
@@ -201,26 +266,49 @@ export default function MusicScreen() {
             </TouchableOpacity>
           </View>
 
-          <FlatList
-            data={filteredSongs}
-            renderItem={renderSongItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={[
-              styles.listContainer,
-              currentSong ? { paddingBottom: 70 } : {}
-            ]}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <Animated.View entering={SlideInRight.duration(300).springify()} style={styles.emptyContainer}>
-                <Ionicons name="musical-notes" size={50} color="#888888" />
-                <Text style={styles.emptyText}>Нічого не знайдено</Text>
-              </Animated.View>
-            }
-          />
-          
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#1DB954" />
+              <Text style={styles.loadingText}>Загрузка песен...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={fetchSongs}>
+                <Text style={styles.retryButtonText}>Повторить</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredSongs}
+              renderItem={renderSongItem}
+              keyExtractor={item => item._id}
+              contentContainerStyle={[
+                styles.listContainer,
+                currentSong ? { paddingBottom: 70 } : {}
+              ]}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <Animated.View entering={SlideInRight.duration(300).springify()} style={styles.emptyContainer}>
+                  <Text style={{
+                    fontSize: 50,
+                  }}>😔</Text>
+                  <Text style={styles.emptyText}>Нічого не знайдено</Text>
+                </Animated.View>
+              }
+            />
+          )}
+
           {currentSong && !isPlayerVisible && (
             <MiniPlayerUI
-              song={currentSong}
+              song={{
+                id: currentSong._id,
+                title: currentSong.title,
+                artist: currentSong.artist,
+                imageUrl: currentSong.coverUrl,
+                duration: formatDuration(currentSong.duration)
+              }}
               onPress={handleOpenPlayer}
               onDismiss={() => setCurrentSong(null)}
             />
@@ -252,8 +340,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     paddingHorizontal: 15,
     height: 44,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
+    backgroundColor: '#111111',
+    borderRadius: 100,
   },
   searchIcon: {
     marginRight: 10,
@@ -263,6 +351,7 @@ const styles = StyleSheet.create({
     height: '100%',
     ...Typography.body2,
     color: '#FFFFFF',
+    fontSize: 14,
   },
   clearButton: {
     padding: 5,
@@ -289,7 +378,57 @@ const styles = StyleSheet.create({
     color: '#1DB954',
     fontFamily: FontFamily.semiBold,
   },
-  listContainer: {
+  content: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#999',
+    fontFamily: FontFamily.medium,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    fontFamily: FontFamily.medium,
+  },
+  retryButton: {
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#1DB954',
+    borderRadius: 20,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: FontFamily.medium,
+  },
+  noResults: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noResultsText: {
+    marginTop: 16,
+    fontSize: 18,
+    color: '#666',
+    fontFamily: FontFamily.medium,
+  },
+  songsList: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
