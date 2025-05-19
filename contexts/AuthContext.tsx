@@ -40,11 +40,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
           
-          // Устанавливаем токен для всех запросов axios
+          
           axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         }
       } catch (error) {
-        console.error('Ошибка при загрузке данных пользователя:', error);
+        console.error('Помилка при загрузці даних користувача:', error);
       } finally {
         setIsLoading(false);
       }

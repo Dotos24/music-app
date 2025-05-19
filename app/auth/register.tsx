@@ -15,17 +15,17 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     // Валидация полей
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Ошибка', 'Пожалуйста, заполните все поля');
+      Alert.alert('Помилка', 'Будь ласка, заповніть всі поля');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Ошибка', 'Пароли не совпадают');
+      Alert.alert('Помилка', 'Паролі не співпадають');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Ошибка', 'Пароль должен содержать минимум 6 символов');
+      Alert.alert('Помилка', 'Пароль повинен містити мінімум 6 символів');
       return;
     }
 
@@ -36,12 +36,12 @@ export default function RegisterScreen() {
       // Перенаправляем на главный экран
       router.replace('/(tabs)');
     } catch (error: any) {
-      console.error('Ошибка регистрации:', error);
+      console.error('Помилка реєстрації:', error);
       
       // Проверяем, есть ли сообщение об ошибке от сервера
-      const errorMessage = error.response?.data?.message || 'Произошла ошибка при регистрации. Пожалуйста, попробуйте снова.';
+      const errorMessage = error.response?.data?.message || 'Виникла помилка при реєстрації. Будь ласка, спробуйте ще раз.';
       
-      Alert.alert('Ошибка регистрации', errorMessage);
+      Alert.alert('Помилка реєстрації', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -50,13 +50,13 @@ export default function RegisterScreen() {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>Создание аккаунта</Text>
+        <Text style={styles.title}>Створення аккаунту</Text>
         
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Имя</Text>
           <TextInput
             style={styles.input}
-            placeholder="Введите ваше имя"
+            placeholder="Введіть ваше ім'я"
             value={name}
             onChangeText={setName}
           />
@@ -66,7 +66,7 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="Введите ваш email"
+            placeholder="Введіть ваш email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -78,7 +78,7 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Пароль</Text>
           <TextInput
             style={styles.input}
-            placeholder="Создайте пароль"
+            placeholder="Створіть пароль"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -89,7 +89,7 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Подтверждение пароля</Text>
           <TextInput
             style={styles.input}
-            placeholder="Повторите пароль"
+            placeholder="Повторіть пароль"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
@@ -104,14 +104,14 @@ export default function RegisterScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Зарегистрироваться</Text>
+            <Text style={styles.buttonText}>Зареєструватися</Text>
           )}
         </TouchableOpacity>
         
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Уже есть аккаунт?</Text>
+          <Text style={styles.footerText}>Вже є аккаунт?</Text>
           <TouchableOpacity onPress={() => router.push('/auth/login')}>
-            <Text style={styles.footerLink}>Войти</Text>
+            <Text style={styles.footerLink}>Увійти</Text>
           </TouchableOpacity>
         </View>
       </View>

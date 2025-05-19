@@ -45,28 +45,28 @@ export default function MusicScreen() {
     setLoading(true);
     setError(null);
     
-    console.log('Пытаемся загрузить песни с:', `${API_URL}/api/songs`);
+    console.log('Спробуємо завантажити пісні з:', `${API_URL}/api/songs`);
     
     try {
       const response = await axios.get(`${API_URL}/api/songs`);
-      console.log('Получены данные:', response.data);
+      console.log('Отримані дані:', response.data);
       
       if (Array.isArray(response.data)) {
-        console.log('Данные являются массивом, длина:', response.data.length);
+        console.log('Дані є масивом, довжина:', response.data.length);
         setSongs(response.data);
       } else {
-        console.error('Полученные данные не являются массивом:', typeof response.data);
-        setError('Неправильный формат данных от сервера');
+        console.error('Отримані дані не є масивом:', typeof response.data);
+        setError('Неправильний формат даних від сервера');
       }
       
       setLoading(false);
     } catch (err: any) {
-      const errorMessage = err.message || 'Неизвестная ошибка';
-      const statusCode = err.response?.status || 'нет статус-кода';
-      console.error(`Ошибка при загрузке песен: ${errorMessage}, Статус: ${statusCode}`);
-      setError(`Не удалось загрузить песни: ${errorMessage}. Проверьте, что сервер запущен по адресу ${API_URL}`);
+      const errorMessage = err.message || 'Невідома помилка';
+      const statusCode = err.response?.status || 'нема статус-коду';
+      console.error(`Помилка при завантаженні пісень: ${errorMessage}, Статус: ${statusCode}`);
+      setError(`Не вдалося завантажити пісні: ${errorMessage}. Перевірте, що сервер запущений за адресою ${API_URL}`);
       setLoading(false);
-      // Используем тестовые данные в случае ошибки
+      // Використовуємо тестові дані в разі помилки
       setSongs([
         {
           _id: '1',
@@ -414,14 +414,14 @@ export default function MusicScreen() {
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#1DB954" />
-              <Text style={styles.loadingText}>Загрузка песен...</Text>
+              <Text style={styles.loadingText}>Завантаження пісень...</Text>
             </View>
           ) : error ? (
             <View style={styles.errorContainer}>
               <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
               <Text style={styles.errorText}>{error}</Text>
               <TouchableOpacity style={styles.retryButton} onPress={fetchSongs}>
-                <Text style={styles.retryButtonText}>Повторить</Text>
+                <Text style={styles.retryButtonText}>Повторити</Text>
               </TouchableOpacity>
             </View>
           ) : (

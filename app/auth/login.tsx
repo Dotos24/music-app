@@ -12,7 +12,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Ошибка', 'Пожалуйста, заполните все поля');
+      Alert.alert('Помилка', 'Будь ласка, заповніть всі поля');
       return;
     }
 
@@ -23,10 +23,10 @@ export default function LoginScreen() {
       // Перенаправляем на главный экран
       router.replace('/(tabs)');
     } catch (error) {
-      console.error('Ошибка входа:', error);
+      console.error('Помилка входу:', error);
       Alert.alert(
-        'Ошибка входа',
-        'Неверный email или пароль. Пожалуйста, попробуйте снова.'
+        'Помилка входу',
+        'Неправильний email або пароль. Будь ласка, спробуйте ще раз.'
       );
     } finally {
       setLoading(false);
@@ -35,13 +35,13 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Вход в аккаунт</Text>
+      <Text style={styles.title}>Вхід в аккаунт</Text>
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Email</Text>
         <TextInput
           style={styles.input}
-          placeholder="Введите ваш email"
+          placeholder="Введіть ваш email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -53,7 +53,7 @@ export default function LoginScreen() {
         <Text style={styles.label}>Пароль</Text>
         <TextInput
           style={styles.input}
-          placeholder="Введите ваш пароль"
+          placeholder="Введіть ваш пароль"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -68,14 +68,14 @@ export default function LoginScreen() {
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Войти</Text>
+          <Text style={styles.buttonText}>Увійти</Text>
         )}
       </TouchableOpacity>
       
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Еще нет аккаунта?</Text>
+        <Text style={styles.footerText}>Ще немає аккаунту?</Text>
         <TouchableOpacity onPress={() => router.push('/auth/register')}>
-          <Text style={styles.footerLink}>Зарегистрироваться</Text>
+          <Text style={styles.footerLink}>Зареєструватися</Text>
         </TouchableOpacity>
       </View>
     </View>

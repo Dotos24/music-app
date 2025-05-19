@@ -19,7 +19,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (user) {
       setUserData({
-        name: user.name || 'Пользователь',
+        name: user.name || 'Користувач',
         email: user.email
       });
     }
@@ -30,7 +30,7 @@ export default function ProfileScreen() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
-      Alert.alert('Ошибка', 'Нам нужно разрешение на доступ к вашей галерее для изменения аватарки');
+      Alert.alert('Помилка', 'Нам потрібно дозвіл на доступ до вашої галереї для зміни аватарки');
       return;
     }
     
@@ -53,7 +53,7 @@ export default function ProfileScreen() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     
     if (status !== 'granted') {
-      Alert.alert('Ошибка', 'Нам нужно разрешение на доступ к вашей камере для создания фото');
+      Alert.alert('Помилка', 'Нам потрібно дозвіл на доступ до вашої камери для створення фото');
       return;
     }
     
@@ -87,10 +87,10 @@ export default function ProfileScreen() {
       // Сохраняем аватарку в контексте профиля
       await setAvatar(uri);
       
-      Alert.alert('Успех', 'Аватарка успешно обновлена');
+      Alert.alert('Успіх', 'Аватарка успішно оновлена');
     } catch (error) {
-      console.error('Ошибка при загрузке аватарки:', error);
-      Alert.alert('Ошибка', 'Не удалось загрузить аватарку. Пожалуйста, попробуйте снова.');
+      console.error('Помилка при завантаженні аватарки:', error);
+      Alert.alert('Помилка', 'Не вдалося завантажити аватарку. Будь ласка, спробуйте ще раз.');
     } finally {
       setUploading(false);
     }
@@ -98,27 +98,27 @@ export default function ProfileScreen() {
   
   const showImageOptions = () => {
     Alert.alert(
-      'Изменить аватарку',
-      'Выберите источник изображения',
+      'Змінити аватарку',
+      'Виберіть джерело зображення',
       [
-        { text: 'Отмена', style: 'cancel' },
-        { text: 'Сделать фото', onPress: takePhoto },
-        { text: 'Выбрать из галереи', onPress: pickImage }
+        { text: 'Відміна', style: 'cancel' },
+        { text: 'Зробити фото', onPress: takePhoto },
+        { text: 'Вибрати з галереї', onPress: pickImage }
       ]
     );
   };
 
   const handleLogout = async () => {
     Alert.alert(
-      'Выход из аккаунта',
-      'Вы уверены, что хотите выйти?',
+      'Вихід з аккаунта',
+      'Ви впевнені, що хочете вийти?',
       [
         {
-          text: 'Отмена',
+          text: 'Відміна',
           style: 'cancel'
         },
         {
-          text: 'Выйти',
+          text: 'Вийти',
           onPress: async () => {
             await logout();
             router.replace('/auth/login');
@@ -159,13 +159,13 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-            Настройки аккаунта
+            Налаштування аккаунта
           </Text>
           
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="person-outline" size={22} color={isDark ? '#FFFFFF' : '#000000'} />
             <Text style={[styles.menuItemText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-              Редактировать профиль
+              Редагувати профіль
             </Text>
             <Ionicons name="chevron-forward" size={22} color="#999999" />
           </TouchableOpacity>
@@ -173,7 +173,7 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="lock-closed-outline" size={22} color={isDark ? '#FFFFFF' : '#000000'} />
             <Text style={[styles.menuItemText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-              Изменить пароль
+              Змінити пароль
             </Text>
             <Ionicons name="chevron-forward" size={22} color="#999999" />
           </TouchableOpacity>
@@ -181,7 +181,7 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="notifications-outline" size={22} color={isDark ? '#FFFFFF' : '#000000'} />
             <Text style={[styles.menuItemText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-              Уведомления
+              Сповіщення
             </Text>
             <Ionicons name="chevron-forward" size={22} color="#999999" />
           </TouchableOpacity>
@@ -189,13 +189,13 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-            Приложение
+            Додатки
           </Text>
           
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="help-circle-outline" size={22} color={isDark ? '#FFFFFF' : '#000000'} />
             <Text style={[styles.menuItemText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-              Помощь и поддержка
+              Допомога та підтримка
             </Text>
             <Ionicons name="chevron-forward" size={22} color="#999999" />
           </TouchableOpacity>
@@ -208,7 +208,7 @@ export default function ProfileScreen() {
           onPress={handleLogout}
         >
           <Ionicons name="log-out-outline" size={22} color="#FF3B30" />
-          <Text style={styles.logoutText}>Выйти из аккаунта</Text>
+          <Text style={styles.logoutText}>Вийти з аккаунта</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

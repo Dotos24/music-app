@@ -7,14 +7,14 @@ export default function AuthLayout() {
       <Stack.Screen
         name="login"
         options={{
-          title: 'Вход',
+          title: 'Вхід',
           headerShown: false,
         }}
       />
       <Stack.Screen
         name="register"
         options={{
-          title: 'Регистрация',
+          title: 'Реєстрація',
           headerShown: false,
         }}
       />

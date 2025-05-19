@@ -16,15 +16,15 @@ export default function FavoritesScreen() {
   const { likedSongs, removeLike } = useLikes();
   const { playSong, currentSong, isPlaying, setCurrentSongPlaylist } = useAudio();
   
-  // Состояние для отображения полноэкранного плеера
+  
   const [showPlayer, setShowPlayer] = useState(false);
   
-  // Отслеживаем изменения в текущей песне
+  
   useEffect(() => {
     console.log('Current song in favorites:', currentSong);
   }, [currentSong]);
   
-  // Подготовка данных для плеера
+  
   const preparePlayerSong = (song: any) => {
     if (!song) return null;
     return {
@@ -36,61 +36,58 @@ export default function FavoritesScreen() {
     };
   };
 
-  // Форматирование длительности трека
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
-  // Получение изображения для обложки
+  
   const getImageSource = (coverPath: string | undefined) => {
     if (!coverPath) {
       return require('@/assets/photo_2025-05-14_21-35-54.jpg');
     }
     
     try {
-      // Если путь начинается с http, используем его напрямую
+      
       if (coverPath.startsWith('http')) {
         return { uri: coverPath };
       }
       
-      // Для всех остальных случаев формируем URL с API_URL
+     
       const baseUrl = API_URL.replace(/\/$/, '');
       
-      // Используем только имя файла без пути
+     
       let fileName = coverPath;
       
-      // Если путь начинается с /assets/ или assets/, удаляем этот префикс
+      
       if (fileName.startsWith('/assets/')) {
-        fileName = fileName.substring(8); // Удаляем '/assets/'
+        fileName = fileName.substring(8); 
       } else if (fileName.startsWith('assets/')) {
-        fileName = fileName.substring(7); // Удаляем 'assets/'
-      } else if (fileName.startsWith('/')) {
-        fileName = fileName.substring(1); // Удаляем начальный '/'
+        fileName = fileName.substring(7); 
+        fileName = fileName.substring(1); 
       }
       
-      // Если путь содержит полный путь, извлекаем только имя файла
       if (fileName.includes('/')) {
         fileName = fileName.split('/').pop() || fileName;
       }
       
-      // Формируем итоговый URL
+      
       return { uri: `${baseUrl}/assets/${fileName}` };
     } catch (error) {
       return require('@/assets/photo_2025-05-14_21-35-54.jpg');
     }
   };
 
-  // Обработка нажатия на трек
+  
   const handleSongPress = (song: any) => {
-    // Просто воспроизводим выбранную песню
+    
     playSong(song);
-    // Показываем плеер
+    
     setShowPlayer(true);
   };
 
-  // Рендер элемента списка
+ 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
       style={styles.songItem} 
@@ -125,7 +122,7 @@ export default function FavoritesScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Полноэкранный плеер - отображается поверх всего */}
+      {}
       {currentSong && showPlayer && (
         <View style={styles.fullPlayerContainer}>
           <MusicPlayerUI 
@@ -162,7 +159,7 @@ export default function FavoritesScreen() {
             />
           )}
           
-          {/* Мини-плеер */}
+          {}
           {currentSong && !showPlayer && (
             <View style={styles.miniPlayerContainer}>
               <MiniPlayerUI 
