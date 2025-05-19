@@ -192,7 +192,10 @@ export default function ProfileScreen() {
             Додатки
           </Text>
           
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => router.push('/support')}
+          >
             <Ionicons name="help-circle-outline" size={22} color={isDark ? '#FFFFFF' : '#000000'} />
             <Text style={[styles.menuItemText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
               Допомога та підтримка
