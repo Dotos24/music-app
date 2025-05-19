@@ -1,6 +1,7 @@
 import { FontFamily, Typography } from "@/constants/Typography";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -80,6 +81,7 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const router = useRouter();
   const { avatar } = useProfile();
+  const { user } = useAuth();
 
   const genres = [
     { title: "Хіп-хоп", image: require("../../assets/starboy.jpg") },
@@ -112,7 +114,7 @@ export default function HomeScreen() {
               { color: isDark ? "#FFFFFF" : "#000000" },
             ]}
           >
-            Доброго дня 👋{" "}
+            Привіт 👋{user?.name ? `, ${user.name}` : ""}
           </Text>
           <TouchableOpacity
             onPress={() => router.push('/profile')}
