@@ -507,18 +507,6 @@ export default function MusicScreen() {
               </Text>
             </TouchableOpacity>
             
-            <TouchableOpacity 
-              key="artists" 
-              style={[
-                styles.filterButton, 
-                activeFilter === 'artists' ? styles.activeFilterButton : {}
-              ]}
-              onPress={() => setActiveFilter('artists')}
-            >
-              <Text style={activeFilter === 'artists' ? styles.activeFilterText : [styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-                Виконавці
-              </Text>
-            </TouchableOpacity>
             
             <TouchableOpacity 
               key="albums" 
