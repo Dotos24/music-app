@@ -401,9 +401,6 @@ export default function MusicScreen() {
               <Text style={styles.activeFilterText}>Всі</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.filterButton}>
-              <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Виконавці</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.filterButton}>
               <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Альбоми</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.filterButton}>
@@ -507,12 +504,14 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   filterButton: {
-    marginRight: 15,
+    marginRight: 10,
     paddingVertical: 5,
+    paddingHorizontal: 15,
+    backgroundColor: '#111111',
+    borderRadius: 100,
   },
   activeFilterButton: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#1DB954',
+    backgroundColor: '#FFFFFF',
   },
   filterText: {
     ...Typography.body2,
@@ -520,7 +519,7 @@ const styles = StyleSheet.create({
   },
   activeFilterText: {
     ...Typography.body2,
-    color: '#1DB954',
+    color: '#00000',
     fontFamily: FontFamily.semiBold,
   },
   content: {
