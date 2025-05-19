@@ -36,6 +36,7 @@ export default function MusicScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [songs, setSongs] = useState<SongItem[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'artists' | 'albums' | 'playlists'>('all');
   
   // Используем аудио контекст
   const { playSong, currentSong: audioContextSong, setCurrentSongPlaylist } = useAudio();
@@ -181,14 +182,31 @@ export default function MusicScreen() {
     }, [fetchSongs])
   );
 
-  const filteredSongs = searchQuery
-    ? songs.filter(
+  const filteredSongs = React.useMemo(() => {
+    let filtered = songs;
+    
+    if (searchQuery) {
+      filtered = filtered.filter(
         (song) =>
           song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (song.album && song.album.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : songs;
+      );
+    }
+    
+    switch (activeFilter) {
+      case 'all':
+        return filtered;
+      case 'artists':
+        return filtered;
+      case 'albums':
+        return filtered.filter(song => !!song.album);
+      case 'playlists':
+        return [];
+      default:
+        return filtered;
+    }
+  }, [songs, searchQuery, activeFilter]);
 
   // Устанавливаем текущий плейлист при изменении списка песен
   useEffect(() => {
@@ -381,6 +399,61 @@ export default function MusicScreen() {
     }
   }, [audioContextSong]);
 
+  const renderFilteredContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1DB954" />
+          <Text style={styles.loadingText}>Завантаження пісень...</Text>
+        </View>
+      );
+    }
+    
+    if (error) {
+      return (
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchSongs}>
+            <Text style={styles.retryButtonText}>Повторити</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    
+    if (activeFilter === 'all' || activeFilter === 'albums' || activeFilter === 'artists') {
+      return (
+        <FlatList
+          data={filteredSongs}
+          renderItem={renderSongItem}
+          keyExtractor={item => item._id}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingBottom: currentSong ? 70 : 20
+          }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <Animated.View entering={SlideInRight.duration(300).springify()} style={styles.emptyContainer}>
+              <Text style={{
+                fontSize: 50,
+              }}>😔</Text>
+              <Text style={styles.emptyText}>Нічого не знайдено</Text>
+            </Animated.View>
+          }
+        />
+      );
+    } else if (activeFilter === 'playlists') {
+      return (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="musical-notes" size={64} color="#888888" />
+          <Text style={styles.emptyText}>Плейлисти будуть доступні в наступних версіях</Text>
+        </View>
+      );
+    }
+    
+    return null;
+  };
+
   return (
     <Animated.View
       style={[styles.container, { backgroundColor: isDark ? '#000000' : '#FFFFFF' }]}
@@ -421,53 +494,60 @@ export default function MusicScreen() {
           </View>
 
           <View style={styles.filterContainer}>
-            <TouchableOpacity style={[styles.filterButton, styles.activeFilterButton]}>
-              <Text style={styles.activeFilterText}>Всі</Text>
+            <TouchableOpacity 
+              key="all" 
+              style={[
+                styles.filterButton, 
+                activeFilter === 'all' ? styles.activeFilterButton : {}
+              ]}
+              onPress={() => setActiveFilter('all')}
+            >
+              <Text style={activeFilter === 'all' ? styles.activeFilterText : [styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
+                Всі
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.filterButton}>
-              <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Альбоми</Text>
+            
+            <TouchableOpacity 
+              key="artists" 
+              style={[
+                styles.filterButton, 
+                activeFilter === 'artists' ? styles.activeFilterButton : {}
+              ]}
+              onPress={() => setActiveFilter('artists')}
+            >
+              <Text style={activeFilter === 'artists' ? styles.activeFilterText : [styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
+                Виконавці
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.filterButton}>
-              <Text style={[styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>Плейлисти</Text>
+            
+            <TouchableOpacity 
+              key="albums" 
+              style={[
+                styles.filterButton, 
+                activeFilter === 'albums' ? styles.activeFilterButton : {}
+              ]}
+              onPress={() => setActiveFilter('albums')}
+            >
+              <Text style={activeFilter === 'albums' ? styles.activeFilterText : [styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
+                Альбоми
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              key="playlists" 
+              style={[
+                styles.filterButton, 
+                activeFilter === 'playlists' ? styles.activeFilterButton : {}
+              ]}
+              onPress={() => setActiveFilter('playlists')}
+            >
+              <Text style={activeFilter === 'playlists' ? styles.activeFilterText : [styles.filterText, { color: isDark ? '#FFFFFF' : '#000000' }]}>
+                Плейлисти
+              </Text>
             </TouchableOpacity>
           </View>
 
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#1DB954" />
-              <Text style={styles.loadingText}>Завантаження пісень...</Text>
-            </View>
-          ) : error ? (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle-outline" size={64} color="#FF3B30" />
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={fetchSongs}>
-                <Text style={styles.retryButtonText}>Повторити</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <FlatList
-              data={filteredSongs}
-              renderItem={renderSongItem}
-              keyExtractor={item => item._id}
-              contentContainerStyle={{
-                paddingHorizontal: 16,
-                paddingBottom: currentSong ? 90 : 20,
-                paddingTop: 10
-              }}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <Animated.View entering={SlideInRight.duration(300).springify()} style={styles.emptyContainer}>
-                  <View style={styles.emptyIconContainer}>
-                    <Text style={styles.emptyIcon}>🎵</Text>
-                    <Text style={styles.emptyIconOverlay}>🔍</Text>
-                  </View>
-                  <Text style={styles.emptyText}>Нічого не знайдено</Text>
-                  <Text style={styles.emptySubtext}>Спробуйте змінити критерії пошуку</Text>
-                </Animated.View>
-              }
-            />
-          )}
+          {renderFilteredContent()}
 
           {currentSong && !isPlayerVisible && (
             <MiniPlayerUI
