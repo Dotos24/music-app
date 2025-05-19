@@ -26,12 +26,17 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# constants/Config.ts
+/constants/Config.ts
+
 # macOS
 .DS_Store
 *.pem
 
 # local env files
 .env*.local
+
+.
 
 # typescript
 *.tsbuildinfo

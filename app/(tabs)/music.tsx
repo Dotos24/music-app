@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   activeFilterButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#DEDEDF',
   },
   filterText: {
     ...Typography.body2,
