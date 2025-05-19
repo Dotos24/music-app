@@ -306,43 +306,67 @@ export default function MusicScreen() {
   // Используем контекст лайков
   const { isLiked, toggleLike } = useLikes();
 
-  const renderSongItem = ({ item }: { item: SongItem }) => (
-    <TouchableOpacity 
-      style={styles.songItem} 
-      activeOpacity={0.7}
-      onPress={() => handleSongPress(item)}
-    >
-      <Image 
-        source={getImageSource(getSongCoverPath(item))}
-        style={styles.songImage} 
-        onError={(e) => {}}
-      />
-      <View style={styles.songInfo}>
-        <Text style={[styles.songTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>{item.title}</Text>
-        <Text style={styles.songArtist}>{item.artist}</Text>
-        {item.album && <Text style={styles.songArtist}>{item.album}</Text>}
-      </View>
-      <View style={styles.songDetails}>
-        <Text style={styles.songDuration}>{formatDuration(item.duration)}</Text>
+  const renderSongItem = ({ item, index }: { item: SongItem, index: number }) => {
+    const isActive = currentSong && currentSong._id === item._id;
+    const backgroundColor = isActive 
+      ? (isDark ? 'rgba(208, 208, 185, 0.1)' : 'rgba(29, 185, 84, 0.2)')
+      : (isDark ? 'rgba(50, 50, 50, 0.19)' : 'rgba(240, 240, 240, 0.5)');
+    
+    return (
+      <Animated.View
+        entering={FadeIn.duration(350).delay(index * 50)}
+      >
         <TouchableOpacity 
-          style={styles.likeButton}
-          onPress={(e) => {
-            e.stopPropagation(); // Предотвращаем всплытие события на родительский элемент
-            toggleLike(item);
-          }}
+          style={[styles.songItem, { backgroundColor }]} 
+          activeOpacity={0.6}
+          onPress={() => handleSongPress(item)}
         >
-          <Ionicons 
-            name={isLiked(item._id) ? "heart" : "heart-outline"} 
-            size={22} 
-            color={isLiked(item._id) ? "#ff3b5c" : isDark ? '#FFFFFF' : '#000000'} 
-          />
+          <View style={styles.songImageContainer}>
+            <Image 
+              source={getImageSource(getSongCoverPath(item))}
+              style={styles.songImage} 
+              onError={(e) => {}}
+            />
+
+          </View>
+          
+          <View style={styles.songInfo}>
+            <Text 
+              style={[styles.songTitle, { color: isDark ? '#FFFFFF' : '#000000' }]} 
+              numberOfLines={1}
+            >
+              {item.title}
+            </Text>
+            <View style={styles.artistRow}>
+              <Text style={[styles.songArtist, isActive ? styles.activeText : null]} numberOfLines={1}>{item.artist}</Text>
+              {item.album && (
+                <>
+                  <Text style={styles.dotSeparator}>•</Text>
+                  <Text style={[styles.songArtist, isActive ? styles.activeText : null]} numberOfLines={1}>{item.album}</Text>
+                </>
+              )}
+            </View>
+          </View>
+          
+          <View style={styles.songDetails}>
+            <TouchableOpacity 
+              style={styles.likeButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                toggleLike(item);
+              }}
+            >
+              <Ionicons 
+                name={isLiked(item._id) ? "heart" : "heart-outline"} 
+                size={24} 
+                color={isLiked(item._id) ? "#ff3b5c" : (isDark ? '#777777' : '#999999')} 
+              />
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.moreButton}>
-          <Ionicons name="ellipsis-horizontal" size={20} color={isDark ? '#FFFFFF' : '#000000'} />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+      </Animated.View>
+    );
+  };
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -427,16 +451,19 @@ export default function MusicScreen() {
               renderItem={renderSongItem}
               keyExtractor={item => item._id}
               contentContainerStyle={{
-                paddingHorizontal: 20,
-                paddingBottom: currentSong ? 70 : 20
+                paddingHorizontal: 16,
+                paddingBottom: currentSong ? 90 : 20,
+                paddingTop: 10
               }}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <Animated.View entering={SlideInRight.duration(300).springify()} style={styles.emptyContainer}>
-                  <Text style={{
-                    fontSize: 50,
-                  }}>😔</Text>
+                  <View style={styles.emptyIconContainer}>
+                    <Text style={styles.emptyIcon}>🎵</Text>
+                    <Text style={styles.emptyIconOverlay}>🔍</Text>
+                  </View>
                   <Text style={styles.emptyText}>Нічого не знайдено</Text>
+                  <Text style={styles.emptySubtext}>Спробуйте змінити критерії пошуку</Text>
                 </Animated.View>
               }
             />
@@ -465,6 +492,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
+  },
+  activeText: {
+    color: '#D0D0B9',
+    fontFamily: FontFamily.medium,
   },
   header: {
     paddingHorizontal: 20,
@@ -573,59 +604,125 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
   },
   songsList: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 20,
   },
+  listHeader: {
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
+  listHeaderTitle: {
+    ...Typography.caption,
+    color: '#888888',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+
   songItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#2A2A2A',
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    marginVertical: 6,
+    elevation: 0,
+  },
+
+  songImageContainer: {
+    position: 'relative',
+    marginRight: 14,
   },
   songImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 4,
+    width: 58,
+    height: 58,
+    borderRadius: 12,
     backgroundColor: '#2A2A2A',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
+
   songInfo: {
     flex: 1,
-    marginLeft: 15,
+    justifyContent: 'center',
+    marginRight: 8,
   },
   songTitle: {
     ...Typography.body1,
     color: '#FFFFFF',
     marginBottom: 4,
+    fontFamily: FontFamily.semiBold,
+    fontSize: 16,
+  },
+  artistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'nowrap',
   },
   songArtist: {
     ...Typography.caption,
     color: '#888888',
+    flex: 0,
+    fontSize: 13,
+  },
+  dotSeparator: {
+    ...Typography.caption,
+    color: '#888888',
+    marginHorizontal: 4,
   },
   songDetails: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingRight: 4,
   },
   likeButton: {
     padding: 8,
-    marginRight: 5,
+    height: 44,
+    width: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   songDuration: {
     ...Typography.caption,
     color: '#888888',
-    marginRight: 15,
+    marginRight: 8,
+    fontFamily: FontFamily.medium,
   },
   moreButton: {
-    padding: 8,
+    padding: 6,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 100,
   },
+  emptyIconContainer: {
+    position: 'relative',
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyIcon: {
+    fontSize: 60,
+    opacity: 0.5,
+  },
+  emptyIconOverlay: {
+    position: 'absolute',
+    fontSize: 34,
+    right: 5,
+    bottom: 5,
+  },
   emptyText: {
-    ...Typography.body1,
+    ...Typography.h3,
     color: '#888888',
     marginTop: 10,
+  },
+  emptySubtext: {
+    ...Typography.body2,
+    color: '#666666',
+    marginTop: 6,
   },
 });
