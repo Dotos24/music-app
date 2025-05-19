@@ -3,8 +3,10 @@ import mongoose, { Schema } from 'mongoose';
 export interface IPlaylist extends mongoose.Document {
   name: string;
   description?: string;
-  user: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
   songs: mongoose.Types.ObjectId[];
+  isPublic: boolean;
+  coverImage: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,7 +21,7 @@ const playlistSchema = new mongoose.Schema<IPlaylist>({
     type: String,
     trim: true
   },
-  user: {
+  userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -28,6 +30,14 @@ const playlistSchema = new mongoose.Schema<IPlaylist>({
     type: Schema.Types.ObjectId,
     ref: 'Song'
   }],
+  isPublic: {
+    type: Boolean,
+    default: false
+  },
+  coverImage: {
+    type: String,
+    default: 'default-playlist-cover.jpg'
+  },
   createdAt: {
     type: Date,
     default: Date.now

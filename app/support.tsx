@@ -16,6 +16,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAuth } from '@/contexts/AuthContext';
+import axios from 'axios';
+import { API_URL } from '@/constants/Config';
 
 export default function SupportScreen() {
   const router = useRouter();
@@ -48,16 +50,13 @@ export default function SupportScreen() {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // In a real app, we would send data to a server
-      // const response = await axios.post(`${API_URL}/api/support`, {
-      //   subject,
-      //   message,
-      //   email,
-      //   userId: user?.id
-      // });
+      // Send data to the API
+      const response = await axios.post(`${API_URL}/api/support`, {
+        subject,
+        message,
+        email,
+        userId: user?.id
+      });
       
       Alert.alert(
         'Дякуємо за звернення', 

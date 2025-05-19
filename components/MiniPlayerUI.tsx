@@ -24,6 +24,12 @@ interface MiniPlayerUIProps {
 const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const [imageError, setImageError] = useState(false);
+  
+  // Reset image error state when song changes
+  useEffect(() => {
+    setImageError(false);
+  }, [song?.id]);
   
   // Используем аудио контекст
   const { isPlaying, position, duration, pauseSong, resumeSong, seekTo } = useAudio();
@@ -97,7 +103,7 @@ const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss })
         <Animated.View 
           style={[
             styles.container, 
-            { backgroundColor: 'rgb(19, 19, 19)' },
+            { backgroundColor: isDark ? 'rgb(19, 19, 19)' : 'rgb(230, 230, 230)' },
             animatedStyle
           ]}
         >
@@ -107,10 +113,11 @@ const MiniPlayerUI: React.FC<MiniPlayerUIProps> = ({ song, onPress, onDismiss })
         onPress={onPress}
       >
         <Image
-          source={song.imageUrl}
+          source={imageError ? require('@/assets/photo_2025-05-14_21-35-54.jpg') : song.imageUrl}
           style={styles.albumArt}
           resizeMode="cover"
           defaultSource={require('@/assets/photo_2025-05-14_21-35-54.jpg')}
+          onError={() => setImageError(true)}
         />
         
         <View style={styles.songInfo}>
@@ -226,7 +233,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgb(0, 0, 0)',
+    backgroundColor: 'rgba(29, 185, 84, 0.2)',
   },
   progressBarContainer: {
     width: '100%',

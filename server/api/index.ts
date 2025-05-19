@@ -1,18 +1,26 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import connectDB from '../config/db';
 import authRoutes from './auth/routes';
 import songsRoutes from './songs/routes';
+import supportRoutes from './support/routes';
+import albumsRoutes from './albums/routes';
+import playlistsRoutes from './playlists/routes';
+import artistsRoutes from './artists/routes';
 // @ts-ignore - Импортируем админ-маршруты
 const adminRoutes = require('../admin');
+import mongoose from 'mongoose';
 
 // Загружаем переменные окружения
 dotenv.config();
 
 // Подключаемся к MongoDB
-connectDB();
+connectDB().catch(err => {
+  console.error('Failed to connect to MongoDB:', err.message);
+  console.log('Server will continue running, but database functionality will be limited');
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +40,10 @@ app.use('/assets', express.static(path.join(__dirname, '../../assets')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/songs', songsRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/albums', albumsRoutes);
+app.use('/api/playlists', playlistsRoutes);
+app.use('/api/artists', artistsRoutes);
 
 // Администраторский интерфейс с простой защитой
 app.use('/admin', (req, res, next) => {
@@ -49,13 +61,33 @@ app.use('/admin', (req, res, next) => {
 }, adminRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', message: 'Server is running' });
+});
+
+// Debug endpoint to check MongoDB connection
+app.get('/api/debug/db', (_req, res) => {
+  res.json({
+    mongoEnv: process.env.MONGODB_URI ? 'Set' : 'Not set',
+    mongoConfig: process.env.MONGODB_URI?.replace(/:[^:]*@/, ':***@') || 'Not available',
+    connectionState: mongoose.connection.readyState
+  });
+});
+
+// Error handling middleware
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Server error:', err);
+  res.status(500).json({
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'production' ? {} : err.message
+  });
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`API URL: http://localhost:${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
 });
 
 // Handle shutdown

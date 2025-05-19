@@ -3,12 +3,12 @@ import mongoose from 'mongoose';
 export interface ISong extends mongoose.Document {
   title: string;
   artist: string;
-  coverAsset?: string; // Имя файла в папке assets (новый формат)
-  coverFilePath?: string; // Старый формат для пути к обложке
-  coverUrl?: string; // Старый формат для URL обложки
+  coverAsset?: string; 
+  coverFilePath?: string; 
+  coverUrl?: string; 
   album?: string;
-  audioAsset?: string; // Имя файла в папке assets (новый формат)
-  audioFilePath?: string; // Старый формат для пути к аудио
+  audioAsset?: string; 
+  audioFilePath?: string; 
   duration: number;
   createdAt: Date;
   updatedAt: Date;

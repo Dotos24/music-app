@@ -31,6 +31,14 @@ const formatTime = (seconds: number) => {
 const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const [imageError, setImageError] = useState(false);
+  
+  // Reset image error state when song changes
+  useEffect(() => {
+    if (song) {
+      setImageError(false);
+    }
+  }, [song?.id]);
   
   // Используем аудио контекст
   const { 
@@ -121,20 +129,22 @@ const MusicPlayerUI: React.FC<MusicPlayerUIProps> = ({ song, isVisible, onClose 
       <View style={styles.albumArtContainer}>
         <View style={styles.albumBackgroundWrapper}>
           <Image 
-            source={song.imageUrl}
+            source={imageError ? require('@/assets/photo_2025-05-14_21-35-54.jpg') : song.imageUrl}
             style={styles.albumBackgroundImage}
             blurRadius={150}
             resizeMode="cover"
             fadeDuration={0} // Убираем плавное появление, чтобы изображение обновлялось мгновенно
             defaultSource={require('@/assets/photo_2025-05-14_21-35-54.jpg')}
+            onError={() => setImageError(true)}
           />
         </View>
         <Image
-          source={song.imageUrl}
+          source={imageError ? require('@/assets/photo_2025-05-14_21-35-54.jpg') : song.imageUrl}
           style={styles.albumArt}
           resizeMode="cover"
           fadeDuration={0} // Убираем плавное появление
           defaultSource={require('@/assets/photo_2025-05-14_21-35-54.jpg')}
+          onError={() => setImageError(true)}
         />
       </View>
 
