@@ -1,6 +1,6 @@
 import { FontFamily, Typography } from '@/constants/Typography';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import { 
@@ -22,6 +22,7 @@ import { API_URL } from '@/constants/Config';
 import { useAudio } from '@/contexts/AudioContext';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 interface SongItem {
   _id: string;
@@ -66,6 +67,7 @@ export default function ArtistScreen() {
   const [songs, setSongs] = useState<SongItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFullBio, setShowFullBio] = useState(false);
   
   const { playSong, setCurrentSongPlaylist } = useAudio();
   
@@ -241,6 +243,12 @@ export default function ArtistScreen() {
     );
   }
   
+  const truncateBio = (bio: string) => {
+    if (!bio) return '';
+    if (bio.length <= 200 || showFullBio) return bio;
+    return bio.substring(0, 200) + '...';
+  };
+  
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000000' : '#FFFFFF' }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
@@ -267,27 +275,70 @@ export default function ArtistScreen() {
                 <Text style={styles.artistName} numberOfLines={2}>
                   {artist.name}
                 </Text>
+                
+                {songs.length > 0 && (
+                  <Text style={styles.artistStats}>
+                    {songs.length} пісень • {albums.length} альбомів
+                  </Text>
+                )}
               </LinearGradient>
             </ImageBackground>
           </View>
         </View>
         
-        {artist.bio && (
-          <View style={styles.bioContainer}>
-            <Text style={[styles.bioHeader, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-              Про артиста
-            </Text>
+        {artist.bio ? (
+          <Animated.View 
+            style={styles.bioContainer}
+            entering={FadeIn.duration(500)}
+          >
+            <View style={styles.bioHeaderContainer}>
+              <Text style={[styles.bioHeader, { color: isDark ? '#FFFFFF' : '#000000' }]}>
+                Біографія
+              </Text>
+              <MaterialIcons name="verified" size={20} color="#1DB954" />
+            </View>
             <Text style={[styles.bioText, { color: isDark ? '#AAAAAA' : '#555555' }]}>
-              {artist.bio}
+              {truncateBio(artist.bio)}
+            </Text>
+            {artist.bio.length > 200 && (
+              <TouchableOpacity 
+                onPress={() => setShowFullBio(!showFullBio)}
+                style={styles.readMoreButton}
+              >
+                <Text style={styles.readMoreText}>
+                  {showFullBio ? 'Згорнути' : 'Читати більше'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        ) : (
+          <View style={styles.noBioContainer}>
+            <Text style={[styles.noBioText, { color: isDark ? '#777777' : '#999999' }]}>
+              Біографія артиста не додана
             </Text>
           </View>
         )}
         
         {albums.length > 0 && (
-          <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-              Альбоми
-            </Text>
+          <Animated.View 
+            style={styles.sectionContainer}
+            entering={FadeIn.duration(500).delay(100)}
+          >
+            <View style={styles.sectionHeaderContainer}>
+              <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>
+                Альбоми
+              </Text>
+              {albums.length > 3 && (
+                <TouchableOpacity 
+                  onPress={() => router.push({
+                    pathname: '/(tabs)/music',
+                    params: { filter: 'albums', artistId: artist._id }
+                  })}
+                >
+                  <Text style={styles.seeAllText}>Дивитись всі</Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <FlatList
               data={albums}
               renderItem={renderAlbumItem}
@@ -297,42 +348,76 @@ export default function ArtistScreen() {
               contentContainerStyle={{ paddingHorizontal: 20 }}
               style={styles.albumsList}
             />
-          </View>
+          </Animated.View>
         )}
         
         {songs.length > 0 && (
-          <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>
-              Пісні
-            </Text>
-            {songs.map((song, index) => (
+          <Animated.View 
+            style={styles.sectionContainer}
+            entering={FadeIn.duration(500).delay(200)}
+          >
+            <View style={styles.sectionHeaderContainer}>
+              <Text style={[styles.sectionTitle, { color: isDark ? '#FFFFFF' : '#000000' }]}>
+                Пісні
+              </Text>
+              {songs.length > 5 && (
+                <TouchableOpacity 
+                  onPress={() => router.push({
+                    pathname: '/(tabs)/music',
+                    params: { filter: 'songs', artistId: artist._id }
+                  })}
+                >
+                  <Text style={styles.seeAllText}>Дивитись всі</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {songs.slice(0, 5).map((song, index) => (
               <View key={song._id}>
                 {renderSongItem({ item: song, index })}
               </View>
             ))}
-          </View>
+            {songs.length > 5 && (
+              <TouchableOpacity 
+                style={styles.showMoreSongsButton}
+                onPress={() => router.push({
+                  pathname: '/(tabs)/music',
+                  params: { filter: 'songs', artistId: artist._id }
+                })}
+              >
+                <Text style={styles.showMoreSongsText}>
+                  Показати більше пісень
+                </Text>
+              </TouchableOpacity>
+            )}
+          </Animated.View>
         )}
         
-        <View style={{ height: 40 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
       
-      <TouchableOpacity 
-        style={[styles.playAllButton, { backgroundColor: isDark ? '#1DB954' : '#1DB954' }]}
-        onPress={() => {
-          if (songs.length > 0) {
-            setCurrentSongPlaylist([...songs]);
-            playSong(songs[0]);
-          } else if (albums.length > 0 && albums[0].songs.length > 0) {
-            setCurrentSongPlaylist(albums[0].songs);
-            playSong(albums[0].songs[0]);
-          } else {
-            Alert.alert('Немає пісень', 'На жаль, немає доступних пісень для відтворення');
-          }
-        }}
+      <BlurView 
+        intensity={80} 
+        tint={isDark ? 'dark' : 'light'} 
+        style={styles.bottomButtonContainer}
       >
-        <Ionicons name="play" size={24} color="#FFFFFF" />
-        <Text style={styles.playAllButtonText}>Відтворити</Text>
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.playAllButton, { backgroundColor: '#1DB954' }]}
+          onPress={() => {
+            if (songs.length > 0) {
+              setCurrentSongPlaylist([...songs]);
+              playSong(songs[0]);
+            } else if (albums.length > 0 && albums[0].songs.length > 0) {
+              setCurrentSongPlaylist(albums[0].songs);
+              playSong(albums[0].songs[0]);
+            } else {
+              Alert.alert('Немає пісень', 'На жаль, немає доступних пісень для відтворення');
+            }
+          }}
+        >
+          <Ionicons name="play" size={24} color="#FFFFFF" />
+          <Text style={styles.playAllButtonText}>Відтворити</Text>
+        </TouchableOpacity>
+      </BlurView>
     </SafeAreaView>
   );
 }
@@ -399,54 +484,103 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   gradient: {
-    flex: 1,
+    width: '100%',
+    height: '50%',
     justifyContent: 'flex-end',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 25,
   },
   artistName: {
-    fontSize: 32,
+    fontSize: 34,
     fontFamily: FontFamily.bold,
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
+  },
+  artistStats: {
+    fontSize: 14,
+    fontFamily: FontFamily.medium,
+    color: '#DDDDDD',
+    marginTop: 5,
   },
   bioContainer: {
     padding: 20,
+    marginTop: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    marginHorizontal: 15,
+  },
+  bioHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   bioHeader: {
     fontSize: 20,
-    fontFamily: FontFamily.semiBold,
-    marginBottom: 10,
+    fontFamily: FontFamily.bold,
+    marginRight: 8,
   },
   bioText: {
     fontSize: 16,
     fontFamily: FontFamily.regular,
     lineHeight: 24,
   },
+  noBioContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  noBioText: {
+    fontSize: 16,
+    fontFamily: FontFamily.medium,
+    fontStyle: 'italic',
+  },
+  readMoreButton: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+  },
+  readMoreText: {
+    color: '#1DB954',
+    fontSize: 15,
+    fontFamily: FontFamily.medium,
+  },
   sectionContainer: {
-    marginTop: 15,
+    marginTop: 25,
+    paddingVertical: 10,
+  },
+  sectionHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 15,
   },
   sectionTitle: {
     fontSize: 22,
-    fontFamily: FontFamily.semiBold,
-    marginBottom: 15,
-    paddingHorizontal: 20,
+    fontFamily: FontFamily.bold,
+  },
+  seeAllText: {
+    color: '#1DB954',
+    fontSize: 15,
+    fontFamily: FontFamily.medium,
   },
   albumsList: {
-    marginBottom: 15,
+    marginBottom: 10,
   },
   albumItem: {
-    width: 150,
+    width: 160,
     marginRight: 15,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   albumCover: {
-    width: 150,
-    height: 150,
+    width: 160,
+    height: 160,
     borderRadius: 8,
   },
   albumInfo: {
     marginTop: 8,
+    paddingHorizontal: 5,
   },
   albumTitle: {
     fontSize: 16,
@@ -464,30 +598,34 @@ const styles = StyleSheet.create({
   songItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 20,
     marginBottom: 5,
   },
   songImageContainer: {
-    marginRight: 15,
-  },
-  songImage: {
     width: 50,
     height: 50,
     borderRadius: 6,
+    overflow: 'hidden',
+    marginRight: 15,
+  },
+  songImage: {
+    width: '100%',
+    height: '100%',
   },
   songInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   songTitle: {
     fontSize: 16,
     fontFamily: FontFamily.semiBold,
-    marginBottom: 4,
   },
   songAlbum: {
     fontSize: 14,
     fontFamily: FontFamily.regular,
     color: '#888888',
+    marginTop: 2,
   },
   songActions: {
     flexDirection: 'row',
@@ -497,34 +635,46 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FontFamily.regular,
     color: '#888888',
-    marginRight: 10,
+    marginRight: 15,
   },
   playButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    padding: 5,
+  },
+  showMoreSongsButton: {
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
     backgroundColor: 'rgba(29, 185, 84, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginTop: 15,
+  },
+  showMoreSongsText: {
+    color: '#1DB954',
+    fontSize: 14,
+    fontFamily: FontFamily.medium,
+  },
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 15,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
   },
   playAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 15,
-    borderRadius: 30,
-    margin: 20,
-    marginTop: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+    height: 50,
+    borderRadius: 25,
+    marginHorizontal: 20,
   },
   playAllButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FontFamily.semiBold,
     marginLeft: 8,
   },
-}); 
+});

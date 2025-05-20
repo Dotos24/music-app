@@ -67,10 +67,20 @@ router.get('/:id', async (req, res) => {
       album: { $exists: false }
     });
     
+    // Count total songs (both in albums and standalone)
+    let totalSongs = songs.length;
+    albums.forEach(album => {
+      totalSongs += album.songs?.length || 0;
+    });
+    
     return res.status(200).json({ 
       artist,
       albums,
-      songs
+      songs,
+      stats: {
+        totalSongs,
+        totalAlbums: albums.length
+      }
     });
   } catch (error) {
     console.error('Error getting artist:', error);
@@ -81,7 +91,14 @@ router.get('/:id', async (req, res) => {
 // Create a new artist (admin only)
 router.post('/', isAuthenticated, async (req, res) => {
   try {
-    const { name, bio } = req.body;
+    const { 
+      name, 
+      bio, 
+      genres, 
+      country, 
+      formedYear,
+      socialLinks 
+    } = req.body;
     
     if (!name) {
       return res.status(400).json({ message: 'Artist name is required' });
@@ -96,6 +113,10 @@ router.post('/', isAuthenticated, async (req, res) => {
     const artist = await Artist.create({
       name,
       bio: bio || '',
+      genres: genres || [],
+      country: country || '',
+      formedYear: formedYear || null,
+      socialLinks: socialLinks || {},
       imageUrl: 'default-artist-image.jpg'
     });
     
@@ -105,6 +126,49 @@ router.post('/', isAuthenticated, async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating artist:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update artist info (admin only)
+router.put('/:id', isAuthenticated, async (req, res) => {
+  try {
+    const artistId = req.params.id;
+    const { 
+      name, 
+      bio, 
+      genres, 
+      country, 
+      formedYear,
+      socialLinks 
+    } = req.body;
+    
+    const artist = await Artist.findById(artistId);
+    if (!artist) {
+      return res.status(404).json({ message: 'Artist not found' });
+    }
+    
+    // Update fields if provided
+    if (name) artist.name = name;
+    if (bio !== undefined) artist.bio = bio;
+    if (genres) artist.genres = genres;
+    if (country !== undefined) artist.country = country;
+    if (formedYear !== undefined) artist.formedYear = formedYear;
+    if (socialLinks) {
+      artist.socialLinks = {
+        ...artist.socialLinks,
+        ...socialLinks
+      };
+    }
+    
+    await artist.save();
+    
+    return res.status(200).json({
+      message: 'Artist updated successfully',
+      artist
+    });
+  } catch (error) {
+    console.error('Error updating artist:', error);
     return res.status(500).json({ message: 'Server error' });
   }
 });
@@ -159,6 +223,10 @@ router.post('/generate', isAuthenticated, async (req, res) => {
         artist = await Artist.create({
           name,
           bio: '',
+          genres: [],
+          country: '',
+          formedYear: null,
+          socialLinks: {},
           imageUrl: 'default-artist-image.jpg'
         });
         

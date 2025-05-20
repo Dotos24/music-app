@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Редагувати артиста - Адмін-панель</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      padding-top: 20px;
+      background-color: #f8f9fa;
+    }
+    .navbar-brand {
+      font-weight: bold;
+    }
+    .container {
+      max-width: 1200px;
+    }
+    .artist-img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 15px;
+    }
+    .required-field::after {
+      content: '*';
+      color: red;
+      margin-left: 4px;
+    }
+    .album-cover, .song-cover {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .nav-pills .nav-link.active {
+      background-color: #0d6efd;
+      color: white;
+    }
+    .nav-pills .nav-link {
+      color: #0d6efd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 rounded">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/admin">Музичний Додаток - Адмін Панель</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/admin">Головна</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/songs">Пісні</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/admin/artists">Артисти</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/albums">Альбоми</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/">На сайт</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h1 class="card-title mb-0">Редагування артиста: <%= artist.name %></h1>
+          <a href="/admin/artists" class="btn btn-outline-secondary">Назад до списку</a>
+        </div>
+        
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger">
+            <%= error %>
+          </div>
+        <% } %>
+        
+        <% if (typeof message !== 'undefined' && message) { %>
+          <div class="alert alert-success">
+            <%= message %>
+          </div>
+        <% } %>
+
+        <div class="row">
+          <div class="col-md-4 text-center">
+            <img src="<%= artist.imageUrl.startsWith('http') 
+              ? artist.imageUrl 
+              : `/assets/${artist.imageUrl}` %>" 
+              alt="<%= artist.name %>" 
+              class="artist-img shadow"
+              onerror="this.src='/assets/default-artist-image.jpg'">
+            
+            <form action="/admin/artists/upload-image/<%= artist._id %>" method="POST" enctype="multipart/form-data" class="mb-4">
+              <div class="mb-3">
+                <label for="image" class="form-label">Змінити фотографію</label>
+                <input class="form-control form-control-sm" id="image" name="image" type="file" accept="image/*">
+              </div>
+              <button type="submit" class="btn btn-sm btn-primary">Завантажити фото</button>
+            </form>
+          </div>
+          
+          <div class="col-md-8">
+            <ul class="nav nav-pills mb-3" id="artistTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="info-tab" data-bs-toggle="pill" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">Інформація</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="albums-tab" data-bs-toggle="pill" data-bs-target="#albums" type="button" role="tab" aria-controls="albums" aria-selected="false">Альбоми (<%= albums.length %>)</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="songs-tab" data-bs-toggle="pill" data-bs-target="#songs" type="button" role="tab" aria-controls="songs" aria-selected="false">Пісні (<%= songs.length %>)</button>
+              </li>
+            </ul>
+            
+            <div class="tab-content" id="artistTabsContent">
+              <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+                <form action="/admin/artists/edit/<%= artist._id %>" method="POST">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="name" class="form-label required-field">Ім'я артиста</label>
+                      <input type="text" class="form-control" id="name" name="name" value="<%= artist.name %>" required>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                      <label for="country" class="form-label">Країна</label>
+                      <input type="text" class="form-control" id="country" name="country" value="<%= artist.country || '' %>">
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="genres" class="form-label">Жанри</label>
+                      <input type="text" class="form-control" id="genres" name="genres" value="<%= artist.genres && artist.genres.join(', ') %>">
+                      <div class="form-text">Введіть жанри, розділені комами</div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                      <label for="formedYear" class="form-label">Рік заснування</label>
+                      <input type="number" class="form-control" id="formedYear" name="formedYear" min="1900" max="2099" value="<%= artist.formedYear || '' %>">
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="bio" class="form-label">Біографія</label>
+                    <textarea class="form-control" id="bio" name="bio" rows="8"><%= artist.bio || '' %></textarea>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-success">Зберегти зміни</button>
+                </form>
+              </div>
+              
+              <div class="tab-pane fade" id="albums" role="tabpanel" aria-labelledby="albums-tab">
+                <% if (albums && albums.length > 0) { %>
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Обкладинка</th>
+                          <th>Назва</th>
+                          <th>Рік</th>
+                          <th>Пісні</th>
+                          <th>Дії</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% albums.forEach(album => { %>
+                          <tr>
+                            <td>
+                              <img src="<%= album.coverImage.startsWith('http') 
+                                ? album.coverImage
+                                : `/assets/${album.coverImage}` %>" 
+                                class="album-cover" 
+                                alt="<%= album.title %>"
+                                onerror="this.src='/assets/default-album-cover.jpg'">
+                            </td>
+                            <td><strong><%= album.title %></strong></td>
+                            <td><%= album.year || '-' %></td>
+                            <td><%= album.songs?.length || 0 %> пісень</td>
+                            <td>
+                              <a href="/admin/albums/edit/<%= album._id %>" class="btn btn-sm btn-outline-primary">Редагувати</a>
+                            </td>
+                          </tr>
+                        <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                  <a href="/admin/albums/add?artist=<%= artist._id %>" class="btn btn-success mt-3">Додати новий альбом</a>
+                <% } else { %>
+                  <div class="alert alert-info">
+                    У цього артиста немає альбомів. 
+                    <a href="/admin/albums/add?artist=<%= artist._id %>" class="alert-link">Додати альбом</a>
+                  </div>
+                <% } %>
+              </div>
+              
+              <div class="tab-pane fade" id="songs" role="tabpanel" aria-labelledby="songs-tab">
+                <% if (songs && songs.length > 0) { %>
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Обкладинка</th>
+                          <th>Назва</th>
+                          <th>Альбом</th>
+                          <th>Тривалість</th>
+                          <th>Дії</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% songs.forEach(song => { %>
+                          <tr>
+                            <td>
+                              <img src="<%= song.coverAsset ? `/assets/${song.coverAsset}` : 
+                                (song.coverUrl || '/assets/default-song-cover.jpg') %>" 
+                                class="song-cover" 
+                                alt="<%= song.title %>"
+                                onerror="this.src='/assets/default-song-cover.jpg'">
+                            </td>
+                            <td><strong><%= song.title %></strong></td>
+                            <td><%= song.album || '-' %></td>
+                            <td>
+                              <% 
+                                const minutes = Math.floor(song.duration / 60);
+                                const seconds = Math.floor(song.duration % 60);
+                                const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                              %>
+                              <%= formattedDuration %>
+                            </td>
+                            <td>
+                              <a href="/admin/songs/edit/<%= song._id %>" class="btn btn-sm btn-outline-primary">Редагувати</a>
+                            </td>
+                          </tr>
+                        <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                  <a href="/admin/songs/add?artist=<%= artist.name %>" class="btn btn-success mt-3">Додати нову пісню</a>
+                <% } else { %>
+                  <div class="alert alert-info">
+                    У цього артиста немає окремих пісень (поза альбомами). 
+                    <a href="/admin/songs/add?artist=<%= artist.name %>" class="alert-link">Додати пісню</a>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

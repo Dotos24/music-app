@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
-// Получаем модель Song, если она уже зарегистрирована
+// Отримуємо модель Song, якщо вона вже зареєстрована
 let Song;
 try {
   Song = mongoose.model('Song');
 } catch (error) {
-  // Если модель не зарегистрирована, импортируем схему и создаем модель
+  // Якщо модель не зареєстрована, імпортуємо схему та створюємо модель
   const songSchema = new mongoose.Schema({
     title: { type: String, required: true },
     artist: { type: String, required: true },

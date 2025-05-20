@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
-  <title>Управление треками</title>
+  <title>Управління треками</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
@@ -74,24 +74,24 @@
 </head>
 <body>
   <div class="container">
-    <h1>Управление треками</h1>
+    <h1>Управління треками</h1>
     
     <% if (message) { %>
       <div class="message"><%= message %></div>
     <% } %>
     
-    <a href="/admin/add" class="btn btn-primary">Добавить новый трек</a>
+    <a href="/admin/add" class="btn btn-primary">Додати новий трек</a>
     
     <% if (songs && songs.length > 0) { %>
       <table>
         <thead>
           <tr>
-            <th>Обложка</th>
-            <th>Название</th>
-            <th>Исполнитель</th>
+            <th>Обкладинка</th>
+            <th>Назва</th>
+            <th>Виконавець</th>
             <th>Альбом</th>
-            <th>Длительность</th>
-            <th>Действия</th>
+            <th>Тривалість</th>
+            <th>Дії</th>
           </tr>
         </thead>
         <tbody>
@@ -112,14 +112,14 @@
                 <%= formattedTime %>
               </td>
               <td>
-                <a href="/admin/delete/<%= song._id %>" class="btn btn-danger" onclick="return confirm('Вы уверены?')">Удалить</a>
+                <a href="/admin/delete/<%= song._id %>" class="btn btn-danger" onclick="return confirm('Ви впевнені?')">Видалити</a>
               </td>
             </tr>
           <% }) %>
         </tbody>
       </table>
     <% } else { %>
-      <p>Треки не найдены. Добавьте новый трек!</p>
+      <p>Треки не знайдено. Додайте новий трек!</p>
     <% } %>
   </div>
 </body>

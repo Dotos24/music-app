@@ -10,9 +10,26 @@ const artistSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  genres: {
+    type: [String],
+    default: []
+  },
+  country: {
+    type: String,
+    trim: true
+  },
+  formedYear: {
+    type: Number
+  },
   imageUrl: {
     type: String,
     trim: true
+  },
+  socialLinks: {
+    website: { type: String, trim: true },
+    instagram: { type: String, trim: true },
+    youtube: { type: String, trim: true },
+    spotify: { type: String, trim: true }
   },
   createdAt: {
     type: Date,

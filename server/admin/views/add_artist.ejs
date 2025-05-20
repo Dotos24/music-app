@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Додати артиста - Адмін-панель</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      padding-top: 20px;
+      background-color: #f8f9fa;
+    }
+    .navbar-brand {
+      font-weight: bold;
+    }
+    .container {
+      max-width: 1200px;
+    }
+    .required-field::after {
+      content: '*';
+      color: red;
+      margin-left: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 rounded">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/admin">Музичний Додаток - Адмін Панель</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/admin">Головна</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/songs">Пісні</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/admin/artists">Артисти</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/albums">Альбоми</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/">На сайт</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h1 class="card-title mb-4">Додати нового артиста</h1>
+        
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger">
+            <%= error %>
+          </div>
+        <% } %>
+
+        <form action="/admin/artists/add" method="POST">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="name" class="form-label required-field">Ім'я артиста</label>
+              <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="country" class="form-label">Країна</label>
+              <input type="text" class="form-control" id="country" name="country">
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="genres" class="form-label">Жанри</label>
+              <input type="text" class="form-control" id="genres" name="genres" placeholder="Рок, Поп, Джаз (розділені комами)">
+              <div class="form-text">Введіть жанри, розділені комами</div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="formedYear" class="form-label">Рік заснування</label>
+              <input type="number" class="form-control" id="formedYear" name="formedYear" min="1900" max="2099">
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="bio" class="form-label">Біографія</label>
+            <textarea class="form-control" id="bio" name="bio" rows="8" placeholder="Введіть біографію артиста..."></textarea>
+          </div>
+          
+          <div class="alert alert-info">
+            <small>
+              <strong>Примітка:</strong> Після створення артиста ви зможете додати фотографію та інші деталі на сторінці редагування.
+            </small>
+          </div>
+          
+          <div class="d-flex justify-content-between mt-4">
+            <a href="/admin/artists" class="btn btn-secondary">Скасувати</a>
+            <button type="submit" class="btn btn-success">Створити артиста</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
