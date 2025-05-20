@@ -2,7 +2,7 @@ import { FontFamily, Typography } from '@/constants/Typography';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert, Platform, Modal } from 'react-native';
+import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Alert, Platform, Modal, ScrollView } from 'react-native';
 import Animated, { FadeIn, SlideInRight } from 'react-native-reanimated';
 import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import MusicPlayerUI from '@/components/MusicPlayerUI';
@@ -856,129 +856,326 @@ export default function MusicScreen() {
         setLoading(false);
       }
     };
+
+    // Render a visualization row for currently playing song
+    const renderVisualizer = () => {
+      return (
+        <View style={styles.visualizerContainer}>
+          {[...Array(6)].map((_, index) => (
+            <Animated.View 
+              key={index}
+              style={[
+                styles.visualizerBar,
+                { 
+                  height: 12 + Math.random() * 12,
+                  backgroundColor: '#1DB954',
+                  marginHorizontal: 2
+                }
+              ]}
+            />
+          ))}
+        </View>
+      );
+    };
     
     return (
-      <View style={styles.selectedAlbumContainer}>
-        <View style={styles.albumHeroSection}>
-          {/* Background blur image */}
-          <View style={styles.albumBackgroundWrapper}>
-            <Image
-              source={getAlbumCoverPath(selectedAlbum)}
-              style={styles.albumBackgroundImage}
-              blurRadius={80}
-              defaultSource={require('@/assets/photo_2025-05-14_21-35-54.jpg')}
-              onError={() => {
-                console.error(`Failed to load album background for: ${selectedAlbum.title}`);
-                handleAlbumImageError(selectedAlbum._id);
-              }}
-            />
-            <View style={styles.albumBackgroundOverlay} />
-          </View>
-        
-          {/* Back button */}
+      <View style={styles.newAlbumContainer}>
+        {/* Sticky header with album info */}
+        <Animated.View 
+          style={[
+            styles.albumStickyHeader,
+            { backgroundColor: isDark ? '#111' : '#fff' }
+          ]}
+          entering={FadeIn.duration(300)}
+        >
           <TouchableOpacity 
-            style={styles.backButton}
+            style={styles.newBackButton}
             onPress={() => setSelectedAlbum(null)}
           >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            <Ionicons 
+              name="chevron-back-circle" 
+              size={32} 
+              color={isDark ? '#fff' : '#000'} 
+            />
           </TouchableOpacity>
           
-          <View style={styles.albumContentWrapper}>
-            {/* Album cover */}
-            <Image
-              source={getAlbumCoverPath(selectedAlbum)}
-              style={styles.selectedAlbumCover}
-              defaultSource={require('@/assets/photo_2025-05-14_21-35-54.jpg')}
-              onError={() => {
-                console.error(`Failed to load album cover for: ${selectedAlbum.title}`);
-                handleAlbumImageError(selectedAlbum._id);
-              }}
-            />
+          <Animated.View 
+            style={styles.stickyAlbumInfo}
+            entering={FadeIn.duration(300).delay(100)}
+          >
+            <Text 
+              style={[
+                styles.stickyAlbumTitle, 
+                { color: isDark ? '#fff' : '#000' }
+              ]}
+              numberOfLines={1}
+            >
+              {selectedAlbum.title}
+            </Text>
+            <Text 
+              style={[
+                styles.stickyAlbumArtist, 
+                { color: isDark ? '#ccc' : '#555' }
+              ]}
+              numberOfLines={1}
+            >
+              {selectedAlbum.artist}
+            </Text>
+          </Animated.View>
+        </Animated.View>
+        
+        {/* Scrollable content */}
+        <ScrollView 
+          style={styles.albumScrollContent}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: currentSong && !isPlayerVisible ? 90 : 20
+          }}
+        >
+          {/* Hero section with full-width album art */}
+          <View style={styles.newAlbumHeroSection}>
+            <Animated.View 
+              style={styles.newAlbumCoverContainer}
+              entering={FadeIn.duration(400)}
+            >
+              <Image
+                source={getAlbumCoverPath(selectedAlbum)}
+                style={styles.newAlbumCoverImage}
+                defaultSource={require('@/assets/photo_2025-05-14_21-35-54.jpg')}
+                onError={() => {
+                  console.error(`Failed to load album cover for: ${selectedAlbum.title}`);
+                  handleAlbumImageError(selectedAlbum._id);
+                }}
+              />
+              
+              {/* Play button overlay */}
+              <TouchableOpacity 
+                style={styles.albumCoverPlayButton}
+                onPress={() => {
+                  if (selectedAlbum.songs && selectedAlbum.songs.length > 0) {
+                    setCurrentSongPlaylist(selectedAlbum.songs);
+                    playSong(selectedAlbum.songs[0]);
+                    setCurrentSong(selectedAlbum.songs[0]);
+                  }
+                }}
+              >
+                <View style={styles.playButtonCircle}>
+                  <Ionicons name="play" size={28} color="#FFFFFF" />
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
             
-            {/* Album info */}
-            <View style={styles.selectedAlbumInfo}>
-              <Text style={[styles.selectedAlbumTitle, { color: '#FFFFFF' }]}>
+            {/* Album metadata */}
+            <Animated.View 
+              style={styles.newAlbumMetadata}
+              entering={FadeIn.duration(300).delay(200)}
+            >
+              <Text style={[styles.newAlbumTitle, { color: isDark ? '#fff' : '#000' }]}>
                 {selectedAlbum.title}
               </Text>
-              <Text style={styles.selectedAlbumArtist}>
+              <Text style={[styles.newAlbumArtist, { color: isDark ? '#ddd' : '#333' }]}>
                 {selectedAlbum.artist}
               </Text>
-              <View style={styles.albumInfoRow}>
-                <Text style={styles.selectedAlbumDetails}>
-                  {selectedAlbum.songs?.length || 0} пісень
-                </Text>
+              
+              <View style={styles.newAlbumStats}>
+                <View style={styles.albumStatItem}>
+                  <Ionicons name="musical-note" size={16} color={isDark ? '#ccc' : '#666'} />
+                  <Text style={[styles.albumStatText, { color: isDark ? '#ccc' : '#666' }]}>
+                    {selectedAlbum.songs?.length || 0} пісень
+                  </Text>
+                </View>
+                
                 {selectedAlbum.year && (
-                  <>
-                    <Text style={styles.dotSeparator}>•</Text>
-                    <Text style={styles.selectedAlbumDetails}>
+                  <View style={styles.albumStatItem}>
+                    <Ionicons name="calendar" size={16} color={isDark ? '#ccc' : '#666'} />
+                    <Text style={[styles.albumStatText, { color: isDark ? '#ccc' : '#666' }]}>
                       {selectedAlbum.year}
                     </Text>
-                  </>
+                  </View>
                 )}
               </View>
-            </View>
-          </View>
-        </View>
-        
-        <View style={styles.albumActionButtons}>
-          <TouchableOpacity 
-            style={styles.playAllButton}
-            onPress={() => {
-              if (selectedAlbum.songs && selectedAlbum.songs.length > 0) {
-                setCurrentSongPlaylist(selectedAlbum.songs);
-                playSong(selectedAlbum.songs[0]);
-                setCurrentSong(selectedAlbum.songs[0]);
-              }
-            }}
-          >
-            <Ionicons name="play-circle" size={24} color="#FFFFFF" />
-            <Text style={styles.playAllButtonText}>Відтворити всі</Text>
-          </TouchableOpacity>
-          
-          <View style={styles.albumButtonsGroup}>
-            <TouchableOpacity 
-              style={styles.addSongsToAlbumButton}
-              onPress={() => {
-                setNewAlbumId(selectedAlbum._id);
-                setSongSelectionModalVisible(true);
-              }}
-            >
-              <Ionicons name="add" size={22} color={isDark ? "#FFFFFF" : "#000000"} />
-              <Text style={[styles.addSongsToAlbumButtonText, { color: isDark ? "#FFFFFF" : "#000000" }]}>
-                Додати
-              </Text>
-            </TouchableOpacity>
+            </Animated.View>
             
-            <TouchableOpacity 
-              style={styles.findSongsButton}
-              onPress={findMatchingSongs}
-            >
-              <Ionicons name="search" size={22} color={isDark ? "#FFFFFF" : "#000000"} />
-              <Text style={[styles.addSongsToAlbumButtonText, { color: isDark ? "#FFFFFF" : "#000000" }]}>
-                Знайти
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        <FlatList
-          data={selectedAlbum.songs}
-          renderItem={renderSongItem}
-          keyExtractor={item => item._id}
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingBottom: currentSong && !isPlayerVisible ? 90 : 20 // Increased padding for mini player
-          }}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={{
-                fontSize: 50,
-              }}>😔</Text>
-              <Text style={styles.emptyText}>У цьому альбомі немає пісень</Text>
+            {/* Album action buttons */}
+            <View style={styles.newAlbumActions}>
+              <TouchableOpacity
+                style={styles.newActionButton}
+                onPress={() => {
+                  if (selectedAlbum.songs && selectedAlbum.songs.length > 0) {
+                    setCurrentSongPlaylist(selectedAlbum.songs);
+                    playSong(selectedAlbum.songs[0]);
+                    setCurrentSong(selectedAlbum.songs[0]);
+                  }
+                }}
+              >
+                <View style={styles.actionButtonIcon}>
+                  <Ionicons name="play" size={18} color="#fff" />
+                </View>
+                <Text style={styles.actionButtonText}>Відтворити</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.newActionButton}
+                onPress={() => {
+                  setNewAlbumId(selectedAlbum._id);
+                  setSongSelectionModalVisible(true);
+                }}
+              >
+                <View style={[styles.actionButtonIcon, { backgroundColor: '#e67e22' }]}>
+                  <Ionicons name="add" size={18} color="#fff" />
+                </View>
+                <Text style={styles.actionButtonText}>Додати</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.newActionButton}
+                onPress={findMatchingSongs}
+              >
+                <View style={[styles.actionButtonIcon, { backgroundColor: '#3498db' }]}>
+                  <Ionicons name="search" size={18} color="#fff" />
+                </View>
+                <Text style={styles.actionButtonText}>Знайти</Text>
+              </TouchableOpacity>
             </View>
-          }
-        />
+          </View>
+          
+          {/* Song list */}
+          <View style={styles.newSongListContainer}>
+            <View style={styles.songListHeader}>
+              <Text style={[styles.songListTitle, { color: isDark ? '#fff' : '#000' }]}>
+                Пісні
+              </Text>
+              {selectedAlbum.songs?.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.shuffleButton}
+                  onPress={() => {
+                    if (selectedAlbum.songs && selectedAlbum.songs.length > 0) {
+                      // Create a shuffled copy of the songs array
+                      const shuffledSongs = [...selectedAlbum.songs];
+                      for (let i = shuffledSongs.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [shuffledSongs[i], shuffledSongs[j]] = [shuffledSongs[j], shuffledSongs[i]];
+                      }
+                      
+                      setCurrentSongPlaylist(shuffledSongs);
+                      playSong(shuffledSongs[0]);
+                      setCurrentSong(shuffledSongs[0]);
+                    }
+                  }}
+                >
+                  <Ionicons name="shuffle" size={18} color={isDark ? '#1DB954' : '#1DB954'} />
+                  <Text style={styles.shuffleButtonText}>Перемішати</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            {selectedAlbum.songs?.length > 0 ? (
+              selectedAlbum.songs.map((song, index) => (
+                <Animated.View
+                  key={song._id}
+                  style={[
+                    styles.newSongItem,
+                    { 
+                      backgroundColor: currentSong?._id === song._id 
+                        ? (isDark ? 'rgba(29, 185, 84, 0.15)' : 'rgba(29, 185, 84, 0.1)') 
+                        : 'transparent'
+                    }
+                  ]}
+                  entering={FadeIn.duration(300).delay(100 + index * 50)}
+                >
+                  <TouchableOpacity
+                    style={styles.newSongItemContent}
+                    onPress={() => {
+                      setCurrentSongPlaylist(selectedAlbum.songs);
+                      playSong(song);
+                      setCurrentSong(song);
+                    }}
+                  >
+                    <View style={styles.songNumberAndPlay}>
+                      {currentSong?._id === song._id ? (
+                        renderVisualizer()
+                      ) : (
+                        <Text style={[
+                          styles.songNumber, 
+                          { color: isDark ? '#aaa' : '#777' }
+                        ]}>
+                          {index + 1}
+                        </Text>
+                      )}
+                    </View>
+                    
+                    <View style={styles.songMainInfo}>
+                      <Text 
+                        style={[
+                          styles.newSongTitle, 
+                          { 
+                            color: currentSong?._id === song._id 
+                              ? '#1DB954' 
+                              : (isDark ? '#fff' : '#000')
+                          }
+                        ]} 
+                        numberOfLines={1}
+                      >
+                        {song.title}
+                      </Text>
+                      <Text 
+                        style={[
+                          styles.newSongArtist, 
+                          { color: isDark ? '#aaa' : '#666' }
+                        ]} 
+                        numberOfLines={1}
+                      >
+                        {song.artist}
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.songRightControls}>
+                      <Text style={[
+                        styles.songDuration, 
+                        { color: isDark ? '#aaa' : '#777' }
+                      ]}>
+                        {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                      </Text>
+                      
+                      <TouchableOpacity style={styles.songMoreButton}>
+                        <Ionicons 
+                          name="ellipsis-vertical" 
+                          size={16} 
+                          color={isDark ? '#ccc' : '#777'} 
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              ))
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Ionicons 
+                  name="musical-notes" 
+                  size={50} 
+                  color={isDark ? '#555' : '#ccc'} 
+                />
+                <Text style={[
+                  styles.emptyText, 
+                  { color: isDark ? '#aaa' : '#777' }
+                ]}>
+                  У цьому альбомі немає пісень
+                </Text>
+                <TouchableOpacity 
+                  style={styles.emptyAddButton}
+                  onPress={() => {
+                    setNewAlbumId(selectedAlbum._id);
+                    setSongSelectionModalVisible(true);
+                  }}
+                >
+                  <Text style={styles.emptyAddButtonText}>
+                    Додати пісні
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </ScrollView>
       </View>
     );
   };
@@ -1931,7 +2128,7 @@ const styles = StyleSheet.create({
     flex: 0,
     fontSize: 13,
   },
-  dotSeparator: {
+  songDotSeparator: {
     ...Typography.caption,
     color: '#888888',
     marginHorizontal: 4,
@@ -2024,7 +2221,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   albumHeroSection: {
-    height: 350,
+    height: 320,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -2039,7 +2236,7 @@ const styles = StyleSheet.create({
   albumBackgroundImage: {
     width: '100%',
     height: '100%',
-    opacity: 0.7,
+    opacity: 0.8,
   },
   albumBackgroundOverlay: {
     position: 'absolute',
@@ -2048,6 +2245,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
+    // Add a subtle gradient overlay
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   albumContentWrapper: {
     flexDirection: 'row',
@@ -2058,24 +2258,30 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 50,
-    left: 20,
+    top: 40,
+    left: 16,
     zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+    // Add subtle shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   selectedAlbumCover: {
-    width: 150,
-    height: 150,
-    borderRadius: 8,
+    width: 160,
+    height: 160,
+    borderRadius: 12,
+    // Enhanced shadow for more depth
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
   },
   selectedAlbumInfo: {
     marginLeft: 20,
@@ -2083,19 +2289,260 @@ const styles = StyleSheet.create({
   },
   selectedAlbumTitle: {
     ...Typography.h3,
+    fontFamily: FontFamily.bold,
     color: '#FFFFFF',
     marginBottom: 8,
-    textShadowColor: 'rgba(0,0,0,0.7)',
+    // Enhanced text shadow for better readability
+    textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
+    fontSize: 24,
+  },
+  
+  // New album view styles
+  newAlbumContainer: {
+    flex: 1,
+    backgroundColor: '#0a0a0a', // Dark theme background
+  },
+  albumStickyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    zIndex: 10,
+  },
+  newBackButton: {
+    width: 40, 
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stickyAlbumInfo: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  stickyAlbumTitle: {
+    ...Typography.subtitle1,
+    fontFamily: FontFamily.semiBold,
+    marginBottom: 2,
+  },
+  stickyAlbumArtist: {
+    ...Typography.body2,
+    fontFamily: FontFamily.regular,
+  },
+  albumScrollContent: {
+    flex: 1,
+  },
+  newAlbumHeroSection: {
+    paddingHorizontal: 16,
+    paddingTop: 0,
+    paddingBottom: 30,
+  },
+  newAlbumCoverContainer: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 10,
+    position: 'relative',
+    alignSelf: 'center',
+  },
+  newAlbumCoverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  albumCoverPlayButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    zIndex: 10,
+  },
+  playButtonCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1DB954',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  newAlbumMetadata: {
+    marginBottom: 20,
+  },
+  newAlbumTitle: {
+    ...Typography.h2,
+    fontFamily: FontFamily.bold,
+    marginBottom: 8,
+    fontSize: 28,
+  },
+  newAlbumArtist: {
+    ...Typography.subtitle1,
+    fontFamily: FontFamily.medium,
+    marginBottom: 16,
+  },
+  newAlbumStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  albumStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  albumStatText: {
+    ...Typography.caption,
+    marginLeft: 6,
+  },
+  newAlbumActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  newActionButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  actionButtonIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1DB954',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  actionButtonText: {
+    ...Typography.caption,
+    fontFamily: FontFamily.medium,
+    color: '#ccc',
+  },
+  newSongListContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 40,
+    minHeight: 300,
+  },
+  songListHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  songListTitle: {
+    ...Typography.h3,
+    fontFamily: FontFamily.bold,
+    fontSize: 20,
+  },
+  shuffleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: 'rgba(29, 185, 84, 0.1)',
+  },
+  shuffleButtonText: {
+    ...Typography.caption,
+    color: '#1DB954',
+    marginLeft: 6,
+    fontFamily: FontFamily.medium,
+  },
+  newSongItem: {
+    borderRadius: 12,
+    marginBottom: 8,
+    paddingHorizontal: 6,
+  },
+  newSongItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  songNumberAndPlay: {
+    width: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  songNumber: {
+    ...Typography.body2,
+    fontFamily: FontFamily.medium,
+  },
+  visualizerContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: 24,
+    width: 32,
+  },
+  visualizerBar: {
+    width: 3,
+    borderRadius: 1,
+  },
+  songMainInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  newSongTitle: {
+    ...Typography.subtitle1,
+    fontFamily: FontFamily.semiBold,
+    marginBottom: 4,
+  },
+  newSongArtist: {
+    ...Typography.caption,
+    fontFamily: FontFamily.regular,
+  },
+  songRightControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+    minWidth: 70,
+    justifyContent: 'flex-end',
+  },
+  songMoreButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  emptyAddButton: {
+    marginTop: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#1DB954',
+    borderRadius: 20,
+  },
+  emptyAddButtonText: {
+    ...Typography.button,
+    color: '#fff',
+    fontFamily: FontFamily.medium,
   },
   selectedAlbumArtist: {
     ...Typography.subtitle2,
+    fontFamily: FontFamily.medium,
     color: '#FFFFFF',
-    marginBottom: 4,
+    marginBottom: 8,
+    // Enhanced text shadow for better readability
     textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    opacity: 0.9,
   },
   selectedAlbumDetails: {
     ...Typography.caption,
@@ -2103,31 +2550,42 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    opacity: 0.8,
   },
   albumInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  dotSeparator: {
+    color: '#FFFFFF',
+    opacity: 0.6,
+    marginHorizontal: 8,
+    fontSize: 12,
+  },
+
   playAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1DB954',
     borderRadius: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 13,
+    paddingHorizontal: 25,
     flex: 1,
     marginRight: 10,
+    // Enhanced shadow for more depth
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 4,
   },
   playAllButtonText: {
     ...Typography.button,
+    fontFamily: FontFamily.semiBold,
     color: '#FFFFFF',
-    marginLeft: 8,
+    marginLeft: 10,
+    fontSize: 15,
   },
   createButton: {
     flexDirection: 'row',
@@ -2260,8 +2718,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginHorizontal: 20,
     marginBottom: 20,
-    marginTop: -30,
+    marginTop: -25,
     zIndex: 10,
+    // Add a subtle background card for the actions
+    borderRadius: 30,
+    padding: 8,
+    paddingHorizontal: 10,
+    // Add subtle shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 2,
+    // Add glass-like effect with border
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   albumButtonsGroup: {
     flexDirection: 'row',
@@ -2271,25 +2742,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    borderRadius: 25,
-    backgroundColor: 'rgba(29, 185, 84, 0.2)',
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 15,
     marginRight: 8,
+    // Add subtle shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   addSongsToAlbumButtonText: {
     ...Typography.button,
-    marginLeft: 4,
+    marginLeft: 6,
     fontSize: 13,
+    fontFamily: FontFamily.medium,
   },
   findSongsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    borderRadius: 25,
-    backgroundColor: 'rgba(29, 185, 84, 0.2)',
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 15,
+    // Add subtle shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   playlistItem: {
     flexDirection: 'row',
